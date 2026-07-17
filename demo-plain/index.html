@@ -1,0 +1,2387 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Channel OS — Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="demo-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style>
+html,body{margin:0;padding:0;background:#F5F4F0;font-family:'Montserrat',sans-serif;color:#1D2126;}
+a{color:#1F3864;text-decoration:none;} a:hover{color:#16294B;text-decoration:underline;}
+input,select,textarea{font-family:'Montserrat',sans-serif;}
+input:focus,select:focus,textarea:focus{outline:2px solid #1F3864;outline-offset:-1px;}
+::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-thumb{background:#D5D1C8;border-radius:6px;} ::-webkit-scrollbar-track{background:transparent;}
+</style>
+</helmet>
+<div style="display:flex;height:100vh;overflow:hidden;background:#F5F4F0;">
+  <div style="width:224px;flex:none;background:#101C33;display:{{ sideDisplay }};flex-direction:column;padding:16px 12px 10px;gap:1px;overflow:auto;">
+    <div style="padding:2px 4px 8px 4px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img src="assets/os-logo.png" alt="Channel OS" style="display:block;width:44px;height:44px;border-radius:10px;flex:none;">
+        <div style="font-family:'Montserrat';font-weight:800;font-size:17px;color:#F4F2ED;letter-spacing:0.02em;">Channel OS <span style="font-size:10px;font-weight:700;color:#D2545E;letter-spacing:0.1em;">DEMO</span></div>
+      </div>
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:0.12em;color:#7C838C;padding:8px 6px 0 6px;">CHANNEL OS · H2 2026</div>
+    </div>
+    <sc-for list="{{ nav }}" as="nv" hint-placeholder-count="16">
+      <sc-if value="{{ nv.hdr }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:11px 12px 3px;font-size:10px;font-weight:700;letter-spacing:0.14em;color:#565D66;">{{ nv.label }}</div>
+      </sc-if>
+      <sc-if value="{{ nv.item }}" hint-placeholder-val="{{ true }}">
+        <div onClick="{{ nv.go }}" style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:{{ nv.color }};background:{{ nv.bg }};" style-hover="background:#1A2A4A;">
+          <span>{{ nv.label }}</span>
+          <span style="font-size:11px;font-weight:700;color:{{ nv.countColor }};">{{ nv.count }}</span>
+        </div>
+      </sc-if>
+    </sc-for>
+    <div style="flex:1;"></div>
+    <div style="padding:10px 12px 4px;border-top:1px solid #22335A;font-size:11.5px;color:#7C838C;line-height:1.5;">
+      <div style="font-weight:700;color:#B7BDC5;">Alex Morgan</div>
+      <div>Director of Channel Sales</div>
+      <div style="margin-top:3px;font-size:10.5px;color:{{ syncColor }};">{{ syncLabel }}</div>
+      <sc-if value="{{ canSignOut }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ signOut }}" style="margin-top:4px;font-size:10.5px;font-weight:700;color:#D2545E;cursor:pointer;">Sign out</div>
+      </sc-if>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+    <div style="flex:none;display:flex;align-items:center;gap:14px;padding:14px 26px;background:#FFFFFF;border-bottom:1px solid #E7E4DD;">
+      <sc-if value="{{ isMobileV }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleNav }}" style="border:1px solid #DAD6CD;background:#FAF9F6;border-radius:8px;width:38px;height:38px;font-size:17px;cursor:pointer;color:#1D2126;flex:none;">☰</button>
+      </sc-if>
+      <img src="assets/os-logo.png" alt="" style="width:34px;height:34px;flex:none;border-radius:8px;">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ backToList }}" style="border:1px solid #DAD6CD;background:#FAF9F6;border-radius:8px;padding:5px 12px;font-family:'Montserrat',sans-serif;font-size:12.5px;font-weight:700;color:#4A4F55;cursor:pointer;" style-hover="background:#EFEDE7;">← Agencies</button>
+          </sc-if>
+          <div style="font-family:'Montserrat';font-weight:800;font-size:21px;letter-spacing:0.01em;">{{ viewTitle }}</div>
+        </div>
+        <div style="font-size:13px;color:#6B7076;margin-top:1px;">{{ viewSub }}</div>
+      </div>
+      <sc-if value="{{ showSearch }}" hint-placeholder-val="{{ false }}">
+        <input value="{{ q }}" onChange="{{ onQ }}" placeholder="Search agencies, territories…" style="width:230px;padding:8px 12px;border:1px solid #DAD6CD;border-radius:8px;font-size:13.5px;background:#FAF9F6;">
+      </sc-if>
+      <sc-if value="{{ addLabel }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ onAdd }}" style="padding:9px 16px;background:#1F3864;border:none;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13.5px;font-weight:700;color:#FFFFFF;cursor:pointer;" style-hover="background:#16294B;">+ {{ addLabel }}</button>
+      </sc-if>
+    </div>
+    <div style="flex:1;overflow:auto;padding:{{ contentPad }};">
+     <div style="min-width:{{ contentMinW }};">
+
+      <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:15px 17px;min-width:0;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.07em;color:#8A8F95;text-transform:uppercase;">{{ k.label }}</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:27px;margin-top:6px;color:{{ k.valueColor }};">{{ k.value }}</div>
+              <div style="font-size:12px;font-weight:600;margin-top:2px;color:{{ k.deltaColor }};">{{ k.delta }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ bkNoData }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFFFFF;border:1px dashed #D5D1C8;border-radius:12px;padding:16px 20px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-family:'Montserrat';font-weight:700;font-size:15px;">Bookings Performance — No Data Available</div>
+              <div style="font-size:12.5px;color:#6B7076;margin-top:2px;">Upload an ERP Sales Order Bookings report to see net bookings, growth, order activity and agency rankings here.</div>
+            </div>
+            <button onClick="{{ goImports }}" style="padding:9px 16px;background:#1F3864;border:none;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#FFFFFF;cursor:pointer;" style-hover="background:#16294B;">Open Sales Import Center</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ bkHas }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:14px;">
+            <sc-for list="{{ bkKpis }}" as="k" hint-placeholder-count="4">
+              <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid #1F3864;border-radius:12px;padding:15px 17px;min-width:0;">
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:0.07em;color:#8A8F95;text-transform:uppercase;">{{ k.label }}</div>
+                <div style="font-family:'Montserrat';font-weight:800;font-size:26px;margin-top:6px;">{{ k.value }}</div>
+                <div style="font-size:12px;font-weight:700;margin-top:2px;color:{{ k.deltaColor }};">{{ k.delta }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Top 10 Agencies — Net Bookings</div><div style="font-size:12px;color:#8A8F95;font-weight:600;">{{ bkPeriod }}</div></div>
+              <sc-for list="{{ bkTop }}" as="b" hint-placeholder-count="5">
+                <div onClick="{{ b.open }}" style="display:flex;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px solid #F0EEE8;cursor:pointer;" style-hover="background:#FAF9F6;">
+                  <span style="flex:none;width:22px;font-size:12px;font-weight:800;color:#8A8F95;">{{ b.rank }}</span>
+                  <span style="flex:1;min-width:0;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ b.name }}</span>
+                  <span style="font-family:'Montserrat';font-weight:800;font-size:14px;">{{ b.net }}</span>
+                  <span style="flex:none;width:58px;text-align:right;font-size:12px;font-weight:800;color:{{ b.gColor }};">{{ b.g }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Bottom 10 Agencies — Net Bookings</div><div style="font-size:12px;color:#8A8F95;font-weight:600;">{{ bkPeriod }}</div></div>
+              <sc-for list="{{ bkBottom }}" as="b" hint-placeholder-count="5">
+                <div onClick="{{ b.open }}" style="display:flex;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px solid #F0EEE8;cursor:pointer;" style-hover="background:#FAF9F6;">
+                  <span style="flex:none;width:22px;font-size:12px;font-weight:800;color:#8A8F95;">{{ b.rank }}</span>
+                  <span style="flex:1;min-width:0;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ b.name }}</span>
+                  <span style="font-family:'Montserrat';font-weight:800;font-size:14px;">{{ b.net }}</span>
+                  <span style="flex:none;width:58px;text-align:right;font-size:12px;font-weight:800;color:{{ b.gColor }};">{{ b.g }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px;">
+          <sc-for list="{{ hLists }}" as="hl" hint-placeholder-count="3">
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid {{ hl.color }};border-radius:12px;padding:16px 18px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                <div style="font-family:'Montserrat';font-weight:700;font-size:14.5px;">{{ hl.label }}</div>
+                <div style="font-size:12px;font-weight:800;color:{{ hl.color }};">{{ hl.n }}</div>
+              </div>
+              <sc-for list="{{ hl.items }}" as="it" hint-placeholder-count="4">
+                <div onClick="{{ it.open }}" style="display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid #F0EEE8;cursor:pointer;" style-hover="background:#FAF9F6;">
+                  <span style="min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ it.name }}</span>
+                  <span style="font-size:12px;font-weight:800;color:{{ hl.color }};">{{ it.h }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ hl.empty }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#B9B4A9;padding:7px 2px;">None</div></sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:14px;margin-top:14px;">
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Monthly Sales — 2025 vs 2026</div>
+              <div style="display:flex;gap:16px;font-size:12px;font-weight:600;color:#6B7076;">
+                <span><span style="display:inline-block;width:10px;height:10px;background:#E3DFD3;border-radius:2px;margin-right:5px;"></span>2025</span>
+                <span><span style="display:inline-block;width:10px;height:10px;background:#1F3864;border-radius:2px;margin-right:5px;"></span>2026</span>
+                <span><span style="display:inline-block;width:10px;height:2px;background:#1D2126;margin-right:5px;vertical-align:middle;"></span>Goal</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:14px;height:190px;margin-top:16px;border-bottom:1px solid #E7E4DD;">
+              <sc-for list="{{ chart }}" as="c" hint-placeholder-count="12">
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative;" title="{{ c.tip }}">
+                  <div style="position:absolute;left:10%;width:80%;bottom:{{ c.goalPct }}%;border-top:2px solid #1D2126;"></div>
+                  <div style="display:flex;align-items:flex-end;gap:3px;height:100%;">
+                    <div style="flex:1;background:#E3DFD3;border-radius:2px 2px 0 0;height:{{ c.h25 }}%;"></div>
+                    <div style="flex:1;background:#1F3864;border-radius:2px 2px 0 0;height:{{ c.h26 }}%;"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:14px;margin-top:6px;">
+              <sc-for list="{{ chart }}" as="c" hint-placeholder-count="12">
+                <div style="flex:1;text-align:center;font-size:11.5px;font-weight:600;color:#8A8F95;">{{ c.m }}</div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Tier Mix — YTD Revenue</div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+              <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="4">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;">
+                    <span>{{ t.label }} <span style="color:#8A8F95;font-weight:500;">· {{ t.reps }} reps</span></span>
+                    <span>{{ t.rev }} <span style="color:#8A8F95;">({{ t.share }})</span></span>
+                  </div>
+                  <div style="height:8px;background:#EFEDE7;border-radius:4px;margin-top:5px;overflow:hidden;">
+                    <div style="height:100%;background:{{ t.color }};width:{{ t.pct }}%;border-radius:4px;"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#8A8F95;margin-top:14px;line-height:1.5;">Top 7 agencies = 78% of YTD — concentration risk. Tier 1R ramps (ULA OK, Luma) launched 7/1.</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;">
+              <sc-for list="{{ catChips }}" as="cc" hint-placeholder-count="5">
+                <span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;background:{{ cc.bg }};color:{{ cc.fg }};">{{ cc.label }} {{ cc.n }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;margin-top:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">YoY Variance — Rolling by Month</div>
+            <div style="font-size:12px;color:#8A8F95;font-weight:600;">Δ vs 2025 and vs goal · green ≥ 0 · red &lt; 0</div>
+          </div>
+          <div style="margin-top:12px;overflow-x:auto;">
+            <sc-for list="{{ varRows }}" as="vr" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:110px repeat(13,minmax(58px,1fr));gap:4px;margin-top:4px;min-width:920px;">
+                <div style="font-size:11.5px;font-weight:700;color:#6B7076;align-self:center;">{{ vr.label }}</div>
+                <sc-for list="{{ vr.cells }}" as="cl" hint-placeholder-count="13">
+                  <div style="text-align:center;padding:6px 2px;border-radius:6px;background:{{ cl.bg }};color:{{ cl.fg }};font-size:11px;font-weight:{{ cl.fw }};white-space:nowrap;overflow:hidden;">{{ cl.t }}</div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Needs Attention</div>
+            <div style="display:flex;flex-direction:column;margin-top:8px;">
+              <sc-for list="{{ risks }}" as="r" hint-placeholder-count="5">
+                <div onClick="{{ r.open }}" style="display:flex;gap:12px;align-items:flex-start;padding:10px 4px;border-bottom:1px solid #F0EEE8;cursor:pointer;" style-hover="background:#FAF9F6;">
+                  <span style="flex:none;margin-top:3px;width:9px;height:9px;border-radius:50%;background:{{ r.dot }};"></span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13.5px;font-weight:700;">{{ r.name }} <span style="font-weight:500;color:#8A8F95;">· {{ r.tier }}</span></div>
+                    <div style="font-size:12.5px;color:#6B7076;margin-top:1px;">{{ r.why }}</div>
+                  </div>
+                  <span style="flex:none;font-size:12px;font-weight:800;padding:3px 9px;border-radius:20px;background:{{ r.hBg }};color:{{ r.hFg }};">{{ r.h }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Biggest Open Opportunities</div>
+            <div style="display:flex;flex-direction:column;margin-top:8px;">
+              <sc-for list="{{ topOpps }}" as="o" hint-placeholder-count="5">
+                <div style="display:flex;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid #F0EEE8;">
+                  <span style="flex:none;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px;background:{{ o.stageBg }};color:{{ o.stageFg }};">{{ o.stage }}</span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ o.name }}</div>
+                    <div style="font-size:12px;color:#8A8F95;">{{ o.agent }}</div>
+                  </div>
+                  <div style="font-family:'Montserrat';font-weight:800;font-size:16px;">{{ o.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAgents }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <sc-for list="{{ filters }}" as="f" hint-placeholder-count="6">
+            <button onClick="{{ f.go }}" style="white-space:nowrap;padding:6px 14px;border-radius:20px;border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.fg }};font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">{{ f.label }} {{ f.n }}</button>
+          </sc-for>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:26px 1.6fr 0.75fr 0.6fr 0.85fr 0.6fr 0.6fr 0.85fr 1.9fr;gap:12px;padding:10px 18px;background:#FAF9F6;border-bottom:1px solid #E7E4DD;font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#8A8F95;text-transform:uppercase;">
+            <span></span><span>Agency / Territory</span><span>Category</span><span>Tier</span><span style="text-align:right;">YTD 2026</span><span style="text-align:right;">YoY</span><span style="text-align:center;">Health</span><span style="text-align:center;">Cert</span><span>This Month's Priority</span>
+          </div>
+          <sc-for list="{{ agentRows }}" as="a" hint-placeholder-count="10">
+            <div onClick="{{ a.open }}" style="display:grid;grid-template-columns:26px 1.6fr 0.75fr 0.6fr 0.85fr 0.6fr 0.6fr 0.85fr 1.9fr;gap:12px;align-items:center;padding:11px 18px;border-bottom:1px solid #F0EEE8;cursor:pointer;" style-hover="background:#FAF8F2;">
+              <span onClick="{{ a.cycle }}" title="Click to cycle status" style="width:13px;height:13px;border-radius:50%;background:{{ a.dot }};border:2px solid #FFFFFF;box-shadow:0 0 0 1px #D5D1C8;cursor:pointer;"></span>
+              <div style="min-width:0;">
+                <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ a.n }}</div>
+                <div style="font-size:12px;color:#8A8F95;">{{ a.terr }}</div>
+              </div>
+              <span><span style="font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:{{ a.catBg }};color:{{ a.catFg }};">{{ a.cat }}</span></span>
+              <span style="font-size:13px;font-weight:700;color:#4A4F55;">{{ a.tier }}</span>
+              <span style="text-align:right;font-family:'Montserrat';font-weight:700;font-size:15px;">{{ a.ytd }}</span>
+              <span style="text-align:right;font-size:13px;font-weight:700;color:{{ a.yoyColor }};">{{ a.yoy }}</span>
+              <span style="text-align:center;"><span style="font-size:12px;font-weight:800;padding:3px 9px;border-radius:20px;background:{{ a.hBg }};color:{{ a.hFg }};">{{ a.h }}</span></span>
+              <span style="text-align:center;"><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:{{ a.certBg }};color:{{ a.certFg }};">{{ a.cert }}</span></span>
+              <span style="font-size:12.5px;color:#4A4F55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">{{ a.pri }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAgentDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+          <sc-for list="{{ detKpis }}" as="k" hint-placeholder-count="4">
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:15px 17px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.07em;color:#8A8F95;text-transform:uppercase;">{{ k.label }}</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:26px;margin-top:6px;color:{{ k.valueColor }};">{{ k.value }}</div>
+              <div style="font-size:12px;font-weight:600;margin-top:2px;color:#8A8F95;">{{ k.delta }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;margin-top:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Bookings Performance Intelligence</div>
+            <div style="font-size:12px;color:#8A8F95;font-weight:600;">{{ detBkMeta }}</div>
+          </div>
+          <sc-if value="{{ detBkNo }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px;color:#8A8F95;margin-top:10px;">No Data Available — this agency has not appeared in an ERP upload yet. Upload a bookings report in the Sales Import Center.</div>
+          </sc-if>
+          <sc-if value="{{ detBkHas }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:12px;">
+              <sc-for list="{{ detBkStats }}" as="b" hint-placeholder-count="8">
+                <div style="background:#FAF9F6;border:1px solid #EFEDE7;border-radius:10px;padding:10px 12px;">
+                  <div style="font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8A8F95;">{{ b.label }}</div>
+                  <div style="font-family:'Montserrat';font-weight:800;font-size:19px;margin-top:2px;color:{{ b.color }};">{{ b.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:10px;height:110px;margin-top:16px;border-bottom:1px solid #E7E4DD;max-width:560px;">
+              <sc-for list="{{ detTrend }}" as="t" hint-placeholder-count="4">
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;" title="{{ t.tip }}">
+                  <div style="font-size:10.5px;font-weight:700;color:#6B7076;margin-bottom:3px;">{{ t.v }}</div>
+                  <div style="width:70%;background:#1F3864;border-radius:3px 3px 0 0;height:{{ t.h }}%;min-height:2px;"></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:5px;max-width:560px;">
+              <sc-for list="{{ detTrend }}" as="t" hint-placeholder-count="4">
+                <div style="flex:1;text-align:center;font-size:10.5px;font-weight:600;color:#8A8F95;">{{ t.label }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-top:14px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;margin-bottom:12px;">Agency Record — all fields editable</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+                <div><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Status</div>
+                  <select name="status" ref="{{ detStatusRef }}" onChange="{{ detF }}" style="width:100%;padding:7px 8px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;font-weight:700;background:{{ detStatusBg }};color:{{ detStatusFg }};cursor:pointer;">
+                    <option value="Green">Green</option><option value="Yellow">Yellow</option><option value="Red">Red</option>
+                  </select></div>
+                <div><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Category</div>
+                  <select name="cat" ref="{{ detCatRef }}" onChange="{{ detF }}" style="width:100%;padding:7px 8px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;font-weight:600;background:#FAF9F6;cursor:pointer;">
+                    <option value="Protect">Protect</option><option value="Build">Build</option><option value="Push">Push</option><option value="Fix">Fix</option><option value="Exit">Exit</option>
+                  </select></div>
+                <div><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Tier</div>
+                  <input name="tier" value="{{ det.tier }}" onChange="{{ detF }}" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;font-weight:700;background:#FAF9F6;"></div>
+                <div><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Coverage</div>
+                  <input name="cov" value="{{ det.cov }}" onChange="{{ detF }}" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;background:#FAF9F6;"></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+                <div><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Territory</div>
+                  <input name="terr" value="{{ det.terr }}" onChange="{{ detF }}" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;"></div>
+                <div><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Verticals</div>
+                  <input name="vert" value="{{ det.vert }}" onChange="{{ detF }}" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;"></div>
+              </div>
+              <div style="margin-top:10px;"><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">This Month's Priority</div>
+                <textarea name="pri" value="{{ det.pri }}" onChange="{{ detF }}" rows="2" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;line-height:1.45;resize:vertical;"></textarea></div>
+              <div style="margin-top:10px;"><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Current Blocker</div>
+                <textarea name="blocker" value="{{ det.blocker }}" onChange="{{ detF }}" rows="2" placeholder="None logged" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;line-height:1.45;resize:vertical;"></textarea></div>
+              <div style="margin-top:10px;"><div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Notes [Date – Who – What – Next]</div>
+                <textarea name="notes" value="{{ det.notes }}" onChange="{{ detF }}" rows="4" placeholder="Log a note…" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;line-height:1.45;resize:vertical;"></textarea></div>
+              <div style="font-size:12px;color:#8A8F95;line-height:1.6;margin-top:12px;">
+                <div><b style="color:#4A4F55;">Visit:</b> {{ det.visit }} · <b style="color:#4A4F55;">Coverage quality:</b> {{ det.cq }}</div>
+                <div><b style="color:#4A4F55;">Risk note:</b> {{ det.risk }}</div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+                <button onClick="{{ detDelete }}" style="padding:8px 14px;border:1px solid #E3C4C2;background:#FFFFFF;color:#C0433F;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;" style-hover="background:#FBF1F0;">Delete agency</button>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Open Opportunities</div>
+              <sc-for list="{{ detOpps }}" as="o" hint-placeholder-count="2">
+                <div style="display:flex;gap:12px;align-items:center;padding:9px 2px;border-bottom:1px solid #F0EEE8;">
+                  <span style="flex:none;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px;background:{{ o.bg }};color:{{ o.fg }};">{{ o.stage }}</span>
+                  <div style="flex:1;min-width:0;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ o.name }}</div>
+                  <span style="font-family:'Montserrat';font-weight:800;font-size:14px;">{{ o.value }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ detNoOpps }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#B9B4A9;padding:8px 2px;">No opportunities logged — add one in the Opportunities view</div></sc-if>
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;margin-top:14px;">Spec Activity</div>
+              <sc-for list="{{ detSpecs }}" as="sp" hint-placeholder-count="2">
+                <div style="display:flex;gap:12px;align-items:center;padding:9px 2px;border-bottom:1px solid #F0EEE8;">
+                  <span style="flex:none;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px;background:{{ sp.bg }};color:{{ sp.fg }};">{{ sp.stage }}</span>
+                  <div style="flex:1;min-width:0;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ sp.project }}</div>
+                  <span style="font-family:'Montserrat';font-weight:800;font-size:14px;">{{ sp.value }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ detNoSpecs }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#B9B4A9;padding:8px 2px;">No spec activity logged</div></sc-if>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Health Score</div>
+                <span style="font-size:14px;font-weight:800;padding:4px 12px;border-radius:20px;background:{{ detHBg }};color:{{ detHFg }};">{{ detH }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+                <sc-for list="{{ detParts }}" as="hp" hint-placeholder-count="6">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>{{ hp.label }} <span style="color:#B9B4A9;">{{ hp.w }}</span></span><span style="font-weight:800;">{{ hp.v }}</span></div>
+                    <div style="height:7px;background:#EFEDE7;border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;width:{{ hp.v }}%;background:{{ hp.color }};border-radius:4px;"></div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #EFEDE7;">
+                <span style="font-size:12px;font-weight:600;">Bookings modifier <span style="color:#B9B4A9;">from ERP uploads</span></span>
+                <span style="font-size:13px;font-weight:800;color:{{ detBkModColor }};">{{ detBkModTxt }}</span>
+              </div>
+              <div style="font-size:11.5px;color:#8A8F95;margin-top:10px;line-height:1.5;">Weights are editable in Settings. Scoring rules are documented in the User Guide.</div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Training &amp; Certification</div>
+                <span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;background:{{ detCertBg }};color:{{ detCertFg }};">{{ detCert }}</span>
+              </div>
+              <div style="font-size:12.5px;color:#6B7076;margin-top:6px;">{{ detCertSub }}</div>
+              <sc-for list="{{ detCourses }}" as="tc" hint-placeholder-count="5">
+                <div style="display:flex;gap:10px;align-items:center;padding:7px 2px;border-bottom:1px solid #F0EEE8;">
+                  <span style="flex:none;width:8px;height:8px;border-radius:50%;background:{{ tc.dot }};"></span>
+                  <span style="flex:1;min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ tc.course }}</span>
+                  <span style="font-size:12px;font-weight:700;color:{{ tc.qColor }};">{{ tc.quiz }}</span>
+                </div>
+              </sc-for>
+              <div style="font-size:12px;color:#8A8F95;margin-top:10px;">Manage records in the Training view.</div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">AIA CEU</div>
+              <div style="font-size:13px;color:#4A4F55;margin-top:8px;line-height:1.7;">
+                <div><b>Status:</b> <span style="font-weight:700;color:{{ detCeuColor }};">{{ detCeuStatus }}</span></div>
+                <div><b>Champion:</b> {{ detCeuChamp }}</div>
+                <div><b>Events delivered:</b> {{ detCeuDelivered }} · <b>Attendees:</b> {{ detCeuAtt }}</div>
+                <div><b>Next action:</b> {{ detCeuNext }}</div>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Contact Cadence</div>
+              <div style="font-size:13px;color:#4A4F55;margin-top:8px;line-height:1.7;">
+                <div><b>Last touch:</b> {{ detLast }} <span style="font-weight:800;color:{{ detDaysColor }};">({{ detDays }})</span></div>
+                <div><b>Next scheduled:</b> {{ detNext }}</div>
+                <div><b>Planned trip:</b> <span style="font-weight:700;color:{{ detTripColor }};">{{ detTrip }}</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOpps }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <sc-for list="{{ stageCards }}" as="s" hint-placeholder-count="6">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid {{ s.color }};border-radius:10px;padding:12px 14px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8A8F95;">{{ s.label }}</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:24px;margin-top:2px;">{{ s.n }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1.5fr 1.2fr 0.9fr 0.7fr 2fr 0.8fr 30px;gap:12px;padding:10px 18px;background:#FAF9F6;border-bottom:1px solid #E7E4DD;font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#8A8F95;text-transform:uppercase;">
+            <span>Opportunity</span><span>Agency</span><span>Stage</span><span>Value</span><span>Next Step</span><span>Owner</span><span></span>
+          </div>
+          <sc-for list="{{ oppRows }}" as="o" hint-placeholder-count="10">
+            <div style="display:grid;grid-template-columns:1.5fr 1.2fr 0.9fr 0.7fr 2fr 0.8fr 30px;gap:12px;align-items:center;padding:8px 18px;border-bottom:1px solid #F0EEE8;">
+              <input name="name" value="{{ o.name }}" onChange="{{ o.set }}" style="border:none;background:transparent;font-size:13.5px;font-weight:700;padding:4px 0;min-width:0;">
+              <select name="agent" ref="{{ o.refAgent }}" onChange="{{ o.set }}" style="border:1px solid transparent;border-radius:6px;padding:4px 2px;font-size:12px;background:transparent;color:#6B7076;cursor:pointer;min-width:0;">
+                <sc-for list="{{ agentOptions }}" as="ao" hint-placeholder-count="5"><option value="{{ ao }}">{{ ao }}</option></sc-for>
+              </select>
+              <select name="stage" ref="{{ o.refStage }}" onChange="{{ o.set }}" style="border:1px solid transparent;border-radius:6px;padding:4px 4px;font-size:12px;font-weight:700;background:{{ o.stageBg }};color:{{ o.stageFg }};cursor:pointer;">
+                <sc-for list="{{ oppStageOptions }}" as="so" hint-placeholder-count="7"><option value="{{ so }}">{{ so }}</option></sc-for>
+              </select>
+              <input name="value" value="{{ o.value }}" onChange="{{ o.set }}" style="border:none;background:transparent;font-family:'Montserrat';font-weight:700;font-size:14px;padding:4px 0;min-width:0;">
+              <input name="next" value="{{ o.next }}" onChange="{{ o.set }}" style="border:none;background:transparent;font-size:12.5px;color:#4A4F55;padding:4px 0;min-width:0;">
+              <input name="owner" value="{{ o.owner }}" onChange="{{ o.set }}" style="border:none;background:transparent;font-size:12.5px;padding:4px 0;min-width:0;">
+              <button onClick="{{ o.del }}" title="Delete" style="border:none;background:transparent;color:#B9B4A9;font-size:15px;cursor:pointer;padding:2px;" style-hover="color:#D9534F;">✕</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSpecs }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <sc-for list="{{ specStageCards }}" as="s" hint-placeholder-count="7">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid {{ s.color }};border-radius:10px;padding:11px 13px;min-width:0;">
+              <div style="font-size:10.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8A8F95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.label }}</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:22px;margin-top:2px;">{{ s.n }}</div>
+              <div style="font-size:11px;font-weight:700;color:#6B7076;">{{ s.v }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1.5fr 1.2fr 1.1fr 1.15fr 0.7fr 1.9fr 30px;gap:12px;padding:10px 18px;background:#FAF9F6;border-bottom:1px solid #E7E4DD;font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#8A8F95;text-transform:uppercase;">
+            <span>Project</span><span>Agency</span><span>Specifier</span><span>Stage</span><span>Value</span><span>Next Step</span><span></span>
+          </div>
+          <sc-for list="{{ specRows }}" as="sp" hint-placeholder-count="10">
+            <div style="display:grid;grid-template-columns:1.5fr 1.2fr 1.1fr 1.15fr 0.7fr 1.9fr 30px;gap:12px;align-items:center;padding:8px 18px;border-bottom:1px solid #F0EEE8;">
+              <input name="project" value="{{ sp.project }}" onChange="{{ sp.set }}" style="border:none;background:transparent;font-size:13.5px;font-weight:700;padding:4px 0;min-width:0;">
+              <select name="agent" ref="{{ sp.refAgent }}" onChange="{{ sp.set }}" style="border:1px solid transparent;border-radius:6px;padding:4px 2px;font-size:12px;background:transparent;color:#6B7076;cursor:pointer;min-width:0;">
+                <sc-for list="{{ agentOptions }}" as="ao" hint-placeholder-count="5"><option value="{{ ao }}">{{ ao }}</option></sc-for>
+              </select>
+              <input name="specifier" value="{{ sp.specifier }}" onChange="{{ sp.set }}" style="border:none;background:transparent;font-size:12.5px;color:#4A4F55;padding:4px 0;min-width:0;">
+              <select name="stage" ref="{{ sp.refStage }}" onChange="{{ sp.set }}" style="border:1px solid transparent;border-radius:6px;padding:4px 4px;font-size:12px;font-weight:700;background:{{ sp.bg }};color:{{ sp.fg }};cursor:pointer;min-width:0;">
+                <sc-for list="{{ specStageOptions }}" as="so" hint-placeholder-count="7"><option value="{{ so }}">{{ so }}</option></sc-for>
+              </select>
+              <input name="value" value="{{ sp.value }}" onChange="{{ sp.set }}" style="border:none;background:transparent;font-family:'Montserrat';font-weight:700;font-size:14px;padding:4px 0;min-width:0;">
+              <input name="next" value="{{ sp.next }}" onChange="{{ sp.set }}" style="border:none;background:transparent;font-size:12.5px;color:#4A4F55;padding:4px 0;min-width:0;">
+              <button onClick="{{ sp.del }}" title="Delete" style="border:none;background:transparent;color:#B9B4A9;font-size:15px;cursor:pointer;padding:2px;" style-hover="color:#D9534F;">✕</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCadence }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <sc-for list="{{ cadStats }}" as="s" hint-placeholder-count="4">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid {{ s.color }};border-radius:10px;padding:12px 14px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8A8F95;">{{ s.label }}</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:24px;margin-top:2px;color:{{ s.color }};">{{ s.n }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1.6fr 0.6fr 0.9fr 1fr 0.9fr 2fr 1.1fr;gap:12px;padding:10px 18px;background:#FAF9F6;border-bottom:1px solid #E7E4DD;font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#8A8F95;text-transform:uppercase;">
+            <span>Agency</span><span>Tier</span><span>Last Touch</span><span>Days Since</span><span>Next Sched.</span><span>Priority / Reason to Call</span><span></span>
+          </div>
+          <sc-for list="{{ cadRows }}" as="c" hint-placeholder-count="12">
+            <div style="display:grid;grid-template-columns:1.6fr 0.6fr 0.9fr 1fr 0.9fr 2fr 1.1fr;gap:12px;align-items:center;padding:9px 18px;border-bottom:1px solid #F0EEE8;">
+              <div onClick="{{ c.open }}" style="min-width:0;cursor:pointer;">
+                <div style="font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.n }}</div>
+                <div style="font-size:11.5px;color:#8A8F95;">{{ c.terr }}</div>
+              </div>
+              <span style="font-size:12.5px;font-weight:700;color:#4A4F55;">{{ c.tier }}</span>
+              <div style="min-width:0;">
+                <input type="date" value="{{ c.lastISO }}" onChange="{{ c.setLast }}" style="border:1px solid transparent;border-radius:6px;background:transparent;font-size:12px;color:#4A4F55;padding:2px 0;width:100%;min-width:0;cursor:pointer;" style-hover="border-color:#DAD6CD;">
+                <div style="font-size:10px;font-weight:700;letter-spacing:0.04em;color:{{ c.modeColor }};">{{ c.mode }}</div>
+              </div>
+              <span><span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;background:{{ c.dBg }};color:{{ c.dFg }};">{{ c.days }}</span></span>
+              <div style="min-width:0;">
+                <input type="date" value="{{ c.nextISO }}" onChange="{{ c.setNext }}" style="border:1px solid transparent;border-radius:6px;background:transparent;font-size:12px;color:#4A4F55;padding:2px 0;width:100%;min-width:0;cursor:pointer;" style-hover="border-color:#DAD6CD;">
+                <div onClick="{{ c.goTrip }}" title="Open calendar" style="font-size:10.5px;font-weight:700;color:#1F3864;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.trip }}</div>
+              </div>
+              <span style="font-size:12.5px;color:#4A4F55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">{{ c.pri }}</span>
+              <button onClick="{{ c.touch }}" style="border:1px solid #D8C6C9;background:#F8F1F1;color:#1F3864;border-radius:8px;padding:5px 10px;font-family:'Montserrat',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;" style-hover="background:#F0E3E4;">Touched today</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isTraining }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <sc-for list="{{ trStats }}" as="s" hint-placeholder-count="5">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid {{ s.color }};border-radius:10px;padding:12px 14px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8A8F95;">{{ s.label }}</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:24px;margin-top:2px;color:{{ s.color }};">{{ s.n }}</div>
+              <div style="font-size:11.5px;font-weight:600;color:#8A8F95;">{{ s.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Certification Status by Agency</div>
+            <div style="font-size:12px;color:#8A8F95;font-weight:600;">Bronze = all Level 1 courses passed · Silver = + specialist track or AIA presenter · Gold = both</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1.6fr 1.2fr 0.8fr 1.4fr 1.2fr 1fr;gap:12px;padding:8px 18px;background:#FAF9F6;border-top:1px solid #E7E4DD;border-bottom:1px solid #E7E4DD;font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#8A8F95;text-transform:uppercase;">
+            <span>Agency</span><span>Level 1 Progress</span><span>Avg Quiz</span><span>Specialist Track</span><span>AIA Presenter</span><span style="text-align:center;">Certification</span>
+          </div>
+          <sc-for list="{{ certRows }}" as="c" hint-placeholder-count="12">
+            <div onClick="{{ c.open }}" style="display:grid;grid-template-columns:1.6fr 1.2fr 0.8fr 1.4fr 1.2fr 1fr;gap:12px;align-items:center;padding:9px 18px;border-bottom:1px solid #F0EEE8;cursor:pointer;" style-hover="background:#FAF8F2;">
+              <span style="font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.n }}</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;height:7px;background:#EFEDE7;border-radius:4px;overflow:hidden;"><div style="height:100%;width:{{ c.pct }}%;background:{{ c.barColor }};border-radius:4px;"></div></div>
+                <span style="font-size:12px;font-weight:700;width:32px;">{{ c.frac }}</span>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:{{ c.quizColor }};">{{ c.quiz }}</span>
+              <span style="font-size:12.5px;color:{{ c.spColor }};font-weight:600;">{{ c.spec }}</span>
+              <span style="font-size:12.5px;color:{{ c.presColor }};font-weight:600;">{{ c.pres }}</span>
+              <span style="text-align:center;"><span style="font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:20px;background:{{ c.certBg }};color:{{ c.certFg }};">{{ c.cert }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:14px;align-items:start;">
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Course Records</div>
+              <select ref="{{ trFilterRef }}" onChange="{{ onTrFilter }}" style="border:1px solid #DAD6CD;border-radius:8px;padding:6px 8px;font-size:12.5px;font-weight:600;background:#FAF9F6;cursor:pointer;">
+                <option value="All">All agencies</option>
+                <sc-for list="{{ agentNames }}" as="an" hint-placeholder-count="5"><option value="{{ an }}">{{ an }}</option></sc-for>
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1.3fr 1.6fr 1fr 0.7fr 0.9fr 30px;gap:10px;padding:8px 18px;background:#FAF9F6;border-top:1px solid #E7E4DD;border-bottom:1px solid #E7E4DD;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#8A8F95;text-transform:uppercase;">
+              <span>Agency</span><span>Course</span><span>Status</span><span>Quiz</span><span>Completed</span><span></span>
+            </div>
+            <sc-for list="{{ trRecRows }}" as="r" hint-placeholder-count="10">
+              <div style="display:grid;grid-template-columns:1.3fr 1.6fr 1fr 0.7fr 0.9fr 30px;gap:10px;align-items:center;padding:7px 18px;border-bottom:1px solid #F0EEE8;">
+                <select name="agent" ref="{{ r.refAgent }}" onChange="{{ r.set }}" style="border:1px solid transparent;border-radius:6px;padding:3px 2px;font-size:12px;background:transparent;color:#4A4F55;cursor:pointer;min-width:0;">
+                  <sc-for list="{{ agentNames }}" as="an" hint-placeholder-count="5"><option value="{{ an }}">{{ an }}</option></sc-for>
+                </select>
+                <select name="course" ref="{{ r.refCourse }}" onChange="{{ r.set }}" style="border:1px solid transparent;border-radius:6px;padding:3px 2px;font-size:12px;font-weight:600;background:transparent;cursor:pointer;min-width:0;">
+                  <sc-for list="{{ courseOptions }}" as="co" hint-placeholder-count="5"><option value="{{ co }}">{{ co }}</option></sc-for>
+                </select>
+                <select name="status" ref="{{ r.refStatus }}" onChange="{{ r.set }}" style="border:1px solid transparent;border-radius:6px;padding:3px 4px;font-size:11.5px;font-weight:700;background:{{ r.stBg }};color:{{ r.stFg }};cursor:pointer;min-width:0;">
+                  <sc-for list="{{ trStatusOptions }}" as="ts" hint-placeholder-count="6"><option value="{{ ts }}">{{ ts }}</option></sc-for>
+                </select>
+                <input name="quiz" value="{{ r.quiz }}" onChange="{{ r.set }}" placeholder="—" style="border:none;background:transparent;font-size:13px;font-weight:700;color:{{ r.quizColor }};width:100%;padding:2px 0;min-width:0;">
+                <span style="font-size:12px;color:#6B7076;">{{ r.completed }}</span>
+                <button onClick="{{ r.del }}" style="border:none;background:transparent;color:#B9B4A9;font-size:14px;cursor:pointer;padding:2px;" style-hover="color:#D9534F;">✕</button>
+              </div>
+            </sc-for>
+            <sc-if value="{{ trNoRecs }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 18px;font-size:13px;color:#8A8F95;">No Data Available — use <b>+ Add course record</b> above to log real training activity per agency.</div>
+            </sc-if>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Specialist Tracks</div>
+              <button onClick="{{ addSpecialist }}" style="border:1px dashed #D5D1C8;background:transparent;border-radius:8px;padding:4px 10px;font-family:'Montserrat',sans-serif;font-size:11.5px;font-weight:700;color:#8A8F95;cursor:pointer;" style-hover="border-color:#1F3864;color:#1F3864;">+ Assign</button>
+            </div>
+            <sc-for list="{{ spTrackRows }}" as="sp" hint-placeholder-count="5">
+              <div style="padding:10px 18px;border-top:1px solid #F0EEE8;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                  <span style="font-size:13px;font-weight:700;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ sp.agent }}</span>
+                  <div style="display:flex;gap:6px;align-items:center;">
+                    <select name="status" ref="{{ sp.refStatus }}" onChange="{{ sp.set }}" style="border:1px solid transparent;border-radius:6px;padding:3px 4px;font-size:11px;font-weight:700;background:{{ sp.stBg }};color:{{ sp.stFg }};cursor:pointer;">
+                      <sc-for list="{{ spStatusOptions }}" as="ss" hint-placeholder-count="5"><option value="{{ ss }}">{{ ss }}</option></sc-for>
+                    </select>
+                    <button onClick="{{ sp.del }}" style="border:none;background:transparent;color:#B9B4A9;font-size:13px;cursor:pointer;padding:0;" style-hover="color:#D9534F;">✕</button>
+                  </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                  <select name="track" ref="{{ sp.refTrack }}" onChange="{{ sp.set }}" style="border:1px solid transparent;border-radius:6px;padding:2px 0;font-size:12px;color:#6B7076;background:transparent;cursor:pointer;min-width:0;">
+                    <sc-for list="{{ spTrackOptions }}" as="tk" hint-placeholder-count="5"><option value="{{ tk }}">{{ tk }}</option></sc-for>
+                  </select>
+                  <span style="font-size:11.5px;color:#8A8F95;">{{ sp.meta }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCeu }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <sc-for list="{{ ceuStats }}" as="s" hint-placeholder-count="5">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid {{ s.color }};border-radius:10px;padding:12px 14px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8A8F95;">{{ s.label }}</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:24px;margin-top:2px;color:{{ s.color }};">{{ s.n }}</div>
+              <div style="font-size:11.5px;font-weight:600;color:#8A8F95;">{{ s.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:14px 18px 10px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Presenter Certification Pipeline</div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div style="font-size:12px;color:#8A8F95;font-weight:600;">Steps: Account → Registered → Portal Access → Training → Assessment → Mock → Approved</div>
+              <button onClick="{{ addCeuProfile }}" style="border:1px dashed #D5D1C8;background:transparent;border-radius:8px;padding:4px 10px;font-family:'Montserrat',sans-serif;font-size:11.5px;font-weight:700;color:#8A8F95;cursor:pointer;" style-hover="border-color:#1F3864;color:#1F3864;">+ Add agency</button>
+            </div>
+          </div>
+          <sc-if value="{{ ceuNoProfs }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:6px 18px 16px;font-size:13px;color:#8A8F95;">No Data Available — add an agency to start tracking its AIA presenter certification.</div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:1.5fr 1fr 1.7fr 1.2fr 0.9fr 1.9fr 0.8fr;gap:12px;padding:8px 18px;background:#FAF9F6;border-top:1px solid #E7E4DD;border-bottom:1px solid #E7E4DD;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#8A8F95;text-transform:uppercase;">
+            <span>Agency</span><span>Champion</span><span>Certification Steps</span><span>Status</span><span>Delivered</span><span>Next Action</span><span>Due</span>
+          </div>
+          <sc-for list="{{ ceuProfRows }}" as="p" hint-placeholder-count="10">
+            <div style="display:grid;grid-template-columns:1.5fr 1fr 1.7fr 1.2fr 0.9fr 1.9fr 0.8fr;gap:12px;align-items:center;padding:8px 18px;border-bottom:1px solid #F0EEE8;">
+              <span style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.agent }}</span>
+              <input name="champName" value="{{ p.champ }}" onChange="{{ p.set }}" placeholder="Name…" style="border:none;background:transparent;font-size:12.5px;font-weight:600;padding:2px 0;min-width:0;">
+              <div style="display:flex;gap:4px;">
+                <sc-for list="{{ p.steps }}" as="st" hint-placeholder-count="7">
+                  <span onClick="{{ st.toggle }}" title="{{ st.label }}" style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:pointer;background:{{ st.bg }};color:{{ st.fg }};border:1px solid {{ st.border }};">{{ st.ch }}</span>
+                </sc-for>
+              </div>
+              <select name="status" ref="{{ p.refStatus }}" onChange="{{ p.set }}" style="border:1px solid transparent;border-radius:6px;padding:4px 4px;font-size:11.5px;font-weight:700;background:{{ p.stBg }};color:{{ p.stFg }};cursor:pointer;min-width:0;">
+                <sc-for list="{{ ceuStatusOptions }}" as="cs" hint-placeholder-count="7"><option value="{{ cs }}">{{ cs }}</option></sc-for>
+              </select>
+              <span style="font-size:12.5px;font-weight:700;color:#4A4F55;">{{ p.delivered }} <span style="font-weight:500;color:#8A8F95;">/ {{ p.att }} att</span></span>
+              <input name="nextAction" value="{{ p.next }}" onChange="{{ p.set }}" placeholder="Next action…" style="border:none;background:transparent;font-size:12.5px;color:#4A4F55;padding:2px 0;min-width:0;">
+              <span style="font-size:12px;font-weight:700;color:{{ p.dueColor }};">{{ p.due }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">CEU Event Log</div>
+            <div style="font-size:12px;color:#8A8F95;font-weight:600;">Every event with attendees needs follow-up within 5 business days</div>
+          </div>
+          <div style="display:grid;grid-template-columns:0.7fr 1.2fr 1.2fr 1.3fr 0.6fr 0.8fr 1fr 1.2fr 30px;gap:10px;padding:8px 18px;background:#FAF9F6;border-top:1px solid #E7E4DD;border-bottom:1px solid #E7E4DD;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#8A8F95;text-transform:uppercase;">
+            <span>Date</span><span>Agency</span><span>Firm</span><span>Course</span><span>Att.</span><span>Format</span><span>Follow-up</span><span>Status</span><span></span>
+          </div>
+          <sc-for list="{{ ceuEventRows }}" as="e" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:0.7fr 1.2fr 1.2fr 1.3fr 0.6fr 0.8fr 1fr 1.2fr 30px;gap:10px;align-items:center;padding:8px 18px;border-bottom:1px solid #F0EEE8;">
+              <span style="font-size:12.5px;font-weight:700;color:#6B7076;">{{ e.date }}</span>
+              <select name="agent" ref="{{ e.refAgent }}" onChange="{{ e.set }}" style="border:1px solid transparent;border-radius:6px;padding:3px 2px;font-size:12px;background:transparent;color:#4A4F55;cursor:pointer;min-width:0;">
+                <sc-for list="{{ agentNames }}" as="an" hint-placeholder-count="5"><option value="{{ an }}">{{ an }}</option></sc-for>
+              </select>
+              <input name="firm" value="{{ e.firm }}" onChange="{{ e.set }}" style="border:none;background:transparent;font-size:12.5px;font-weight:600;padding:2px 0;min-width:0;">
+              <input name="course" value="{{ e.course }}" onChange="{{ e.set }}" style="border:none;background:transparent;font-size:12.5px;padding:2px 0;min-width:0;">
+              <input name="attendees" value="{{ e.att }}" onChange="{{ e.set }}" style="border:none;background:transparent;font-size:13px;font-weight:700;width:100%;padding:2px 0;min-width:0;">
+              <select name="loc" ref="{{ e.refLoc }}" onChange="{{ e.set }}" style="border:1px solid transparent;border-radius:6px;padding:3px 2px;font-size:12px;background:transparent;color:#6B7076;cursor:pointer;min-width:0;">
+                <option value="In Person">In Person</option><option value="Virtual">Virtual</option>
+              </select>
+              <button onClick="{{ e.toggleFu }}" style="border:1px solid {{ e.fuBorder }};background:{{ e.fuBg }};color:{{ e.fuFg }};border-radius:20px;padding:3px 10px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ e.fu }}</button>
+              <select name="status" ref="{{ e.refStatus }}" onChange="{{ e.set }}" style="border:1px solid transparent;border-radius:6px;padding:3px 4px;font-size:11.5px;font-weight:700;background:{{ e.stBg }};color:{{ e.stFg }};cursor:pointer;min-width:0;">
+                <option value="Scheduled">Scheduled</option><option value="Completed">Completed</option><option value="Needs Follow-Up">Needs Follow-Up</option><option value="Converted to Spec Activity">Converted to Spec Activity</option><option value="Cancelled">Cancelled</option>
+              </select>
+              <button onClick="{{ e.del }}" style="border:none;background:transparent;color:#B9B4A9;font-size:14px;cursor:pointer;padding:2px;" style-hover="color:#D9534F;">✕</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ ceuNoEvents }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:14px 18px;font-size:13px;color:#8A8F95;">No Data Available — use <b>+ Log CEU event</b> above when a presentation is scheduled or delivered.</div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isYoy }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:0.7fr 1fr 1fr 1fr 1.6fr 0.8fr;gap:12px;padding:10px 18px;background:#FAF9F6;border-bottom:1px solid #E7E4DD;font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#8A8F95;text-transform:uppercase;">
+            <span>Month</span><span style="text-align:right;">2025</span><span style="text-align:right;">2026</span><span style="text-align:right;">Goal</span><span>% to Goal</span><span style="text-align:right;">YoY Δ</span>
+          </div>
+          <sc-for list="{{ yoyRows }}" as="y" hint-placeholder-count="13">
+            <div style="display:grid;grid-template-columns:0.7fr 1fr 1fr 1fr 1.6fr 0.8fr;gap:12px;align-items:center;padding:10px 18px;border-bottom:1px solid #F0EEE8;background:{{ y.bg }};font-weight:{{ y.fw }};">
+              <span style="font-size:13.5px;font-weight:700;">{{ y.m }}</span>
+              <span style="text-align:right;font-family:'Montserrat';font-size:14.5px;color:#6B7076;">{{ y.p25 }}</span>
+              <span style="text-align:right;font-family:'Montserrat';font-size:14.5px;font-weight:700;">{{ y.p26 }}</span>
+              <span style="text-align:right;font-family:'Montserrat';font-size:14.5px;color:#6B7076;">{{ y.pg }}</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;height:7px;background:#EFEDE7;border-radius:4px;overflow:hidden;"><div style="height:100%;width:{{ y.goalPct }}%;background:{{ y.goalColor }};border-radius:4px;"></div></div>
+                <span style="font-size:12px;font-weight:700;width:40px;color:{{ y.goalColor }};">{{ y.goalTxt }}</span>
+              </div>
+              <span style="text-align:right;font-size:13px;font-weight:700;color:{{ y.varColor }};">{{ y.varTxt }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCalendar }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+          <sc-for list="{{ months }}" as="mo" hint-placeholder-count="6">
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:16px 18px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                <div style="font-family:'Montserrat';font-weight:800;font-size:18px;">{{ mo.name }} 2026</div>
+                <div style="font-size:12px;font-weight:700;color:{{ mo.daysColor }};">{{ mo.days }} travel days</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+                <sc-for list="{{ mo.trips }}" as="t" hint-placeholder-count="2">
+                  <div style="display:flex;gap:10px;align-items:center;padding:9px 12px;background:#FAF9F6;border:1px solid #EFEDE7;border-radius:8px;">
+                    <span style="flex:none;font-size:11px;font-weight:800;color:#8A8F95;width:24px;">{{ t.week }}</span>
+                    <input name="who" value="{{ t.who }}" onChange="{{ t.set }}" style="flex:1;border:none;background:transparent;font-size:13px;font-weight:600;min-width:0;padding:2px 0;">
+                    <input name="days" value="{{ t.days }}" onChange="{{ t.set }}" style="width:26px;border:none;background:transparent;font-size:13px;font-weight:700;text-align:center;">
+                    <select name="status" ref="{{ t.refStatus }}" onChange="{{ t.set }}" style="border:none;border-radius:6px;padding:3px 4px;font-size:11.5px;font-weight:700;background:{{ t.stBg }};color:{{ t.stFg }};cursor:pointer;">
+                      <option value="Scheduled">Scheduled</option><option value="Done">Done</option><option value="Cancelled">Cancelled</option>
+                    </select>
+                    <button onClick="{{ t.del }}" style="border:none;background:transparent;color:#B9B4A9;cursor:pointer;font-size:13px;padding:0;" style-hover="color:#D9534F;">✕</button>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ mo.empty }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:12.5px;color:#B9B4A9;padding:6px 2px;">No trips planned</div>
+                </sc-if>
+                <button onClick="{{ mo.add }}" style="align-self:flex-start;border:1px dashed #D5D1C8;background:transparent;border-radius:8px;padding:5px 12px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;color:#8A8F95;cursor:pointer;" style-hover="border-color:#1F3864;color:#1F3864;">+ Trip</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCalls }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <sc-for list="{{ callStats }}" as="s" hint-placeholder-count="4">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #E7E4DD;border-radius:10px;padding:12px 14px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8A8F95;">{{ s.label }}</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:24px;margin-top:2px;color:{{ s.color }};">{{ s.n }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1.1fr 1.3fr 1fr 0.5fr 1.3fr 0.9fr 0.9fr 1fr 30px;gap:12px;padding:10px 18px;background:#FAF9F6;border-bottom:1px solid #E7E4DD;font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#8A8F95;text-transform:uppercase;">
+            <span>Contact</span><span>Organization</span><span>Type</span><span>St</span><span>Purpose</span><span>Reached</span><span>Follow-up</span><span>Status</span><span></span>
+          </div>
+          <sc-for list="{{ callRows }}" as="c" hint-placeholder-count="8">
+            <div style="display:grid;grid-template-columns:1.1fr 1.3fr 1fr 0.5fr 1.3fr 0.9fr 0.9fr 1fr 30px;gap:12px;align-items:center;padding:8px 18px;border-bottom:1px solid #F0EEE8;">
+              <div style="min-width:0;">
+                <input name="c" value="{{ c.c }}" onChange="{{ c.set }}" style="border:none;background:transparent;font-size:13.5px;font-weight:700;width:100%;padding:2px 0;">
+                <div style="font-size:11px;color:#8A8F95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.email }}</div>
+              </div>
+              <input name="org" value="{{ c.org }}" onChange="{{ c.set }}" style="border:none;background:transparent;font-size:13px;min-width:0;padding:2px 0;">
+              <span style="font-size:12.5px;color:#6B7076;">{{ c.type }}</span>
+              <span style="font-size:12.5px;font-weight:700;">{{ c.st }}</span>
+              <input name="reason" value="{{ c.reason }}" onChange="{{ c.set }}" style="border:none;background:transparent;font-size:12.5px;color:#4A4F55;min-width:0;padding:2px 0;">
+              <span style="font-size:12.5px;color:#6B7076;">{{ c.dateTxt }}</span>
+              <span style="font-size:12.5px;font-weight:700;color:{{ c.fuColor }};">{{ c.fuTxt }}</span>
+              <select name="status" ref="{{ c.refStatus }}" onChange="{{ c.set }}" style="border:none;border-radius:6px;padding:4px 4px;font-size:11.5px;font-weight:700;background:{{ c.stBg }};color:{{ c.stFg }};cursor:pointer;">
+                <option value="New">New</option><option value="Attempting">Attempting</option><option value="In Conversation">In Conversation</option><option value="Meeting Set">Meeting Set</option><option value="Won">Won</option><option value="Closed / Dead">Closed / Dead</option>
+              </select>
+              <button onClick="{{ c.del }}" style="border:none;background:transparent;color:#B9B4A9;font-size:15px;cursor:pointer;padding:2px;" style-hover="color:#D9534F;">✕</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isLinkedin }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">
+          <div>
+            <div style="display:flex;gap:12px;margin-bottom:14px;">
+              <sc-for list="{{ liStats }}" as="s" hint-placeholder-count="4">
+                <div style="flex:1;background:#FFFFFF;border:1px solid #E7E4DD;border-radius:10px;padding:12px 14px;">
+                  <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8A8F95;">{{ s.label }}</div>
+                  <div style="font-family:'Montserrat';font-weight:800;font-size:24px;margin-top:2px;">{{ s.n }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+              <div style="display:grid;grid-template-columns:0.8fr 1.2fr 2.2fr 1fr 30px;gap:12px;padding:10px 18px;background:#FAF9F6;border-bottom:1px solid #E7E4DD;font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#8A8F95;text-transform:uppercase;">
+                <span>Date</span><span>Pillar</span><span>Hook / Headline</span><span>Status</span><span></span>
+              </div>
+              <sc-for list="{{ postRows }}" as="p" hint-placeholder-count="10">
+                <div style="display:grid;grid-template-columns:0.8fr 1.2fr 2.2fr 1fr 30px;gap:12px;align-items:center;padding:8px 18px;border-bottom:1px solid #F0EEE8;">
+                  <span style="font-size:12.5px;font-weight:700;color:#6B7076;">{{ p.dateTxt }}</span>
+                  <span style="font-size:12.5px;font-weight:600;">{{ p.pillar }}</span>
+                  <input name="hook" value="{{ p.hook }}" onChange="{{ p.set }}" placeholder="Draft the hook…" style="border:none;background:transparent;font-size:13px;min-width:0;padding:2px 0;">
+                  <select name="status" ref="{{ p.refStatus }}" onChange="{{ p.set }}" style="border:none;border-radius:6px;padding:4px 4px;font-size:11.5px;font-weight:700;background:{{ p.stBg }};color:{{ p.stFg }};cursor:pointer;">
+                    <option value="Idea">Idea</option><option value="Drafting">Drafting</option><option value="Scheduled">Scheduled</option><option value="Posted">Posted</option><option value="Skipped">Skipped</option>
+                  </select>
+                  <button onClick="{{ p.del }}" style="border:none;background:transparent;color:#B9B4A9;font-size:15px;cursor:pointer;padding:2px;" style-hover="color:#D9534F;">✕</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;align-self:start;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Posts by Pillar — H2 Plan</div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+              <sc-for list="{{ pillarRows }}" as="pl" hint-placeholder-count="6">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;"><span>{{ pl.p }}</span><span>{{ pl.n }}</span></div>
+                  <div style="height:8px;background:#EFEDE7;border-radius:4px;margin-top:5px;overflow:hidden;"><div style="height:100%;background:#1F3864;width:{{ pl.pct }}%;border-radius:4px;"></div></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#8A8F95;margin-top:14px;line-height:1.5;">Cadence: 2 posts/week (Mon &amp; Thu) · 56 slots Jul–Dec · first post drew 165 impressions.</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isReports }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <sc-for list="{{ repTabs }}" as="rt" hint-placeholder-count="6">
+            <button onClick="{{ rt.go }}" style="white-space:nowrap;padding:7px 15px;border-radius:20px;border:1px solid {{ rt.border }};background:{{ rt.bg }};color:{{ rt.fg }};font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">{{ rt.label }}</button>
+          </sc-for>
+          <div style="flex:1;"></div>
+          <select ref="{{ repFilterRef }}" onChange="{{ onRepFilter }}" style="border:1px solid #DAD6CD;border-radius:8px;padding:7px 10px;font-size:12.5px;font-weight:600;background:#FFFFFF;cursor:pointer;">
+            <option value="All">All agencies</option>
+            <sc-for list="{{ agentNames }}" as="an" hint-placeholder-count="5"><option value="{{ an }}">{{ an }}</option></sc-for>
+          </select>
+          <button onClick="{{ repExport }}" style="padding:8px 16px;background:#1D2126;border:none;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:12.5px;font-weight:700;color:#FFFFFF;cursor:pointer;" style-hover="background:#22335A;">⬇ Export CSV</button>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;">
+          <div style="padding:14px 18px 4px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">{{ repTitle }}</div>
+            <div style="font-size:12.5px;color:#8A8F95;margin-top:2px;">{{ repSub }}</div>
+          </div>
+          <div style="overflow:auto;">
+            <div style="display:grid;grid-template-columns:{{ repGrid }};gap:10px;padding:9px 18px;background:#FAF9F6;border-top:1px solid #E7E4DD;border-bottom:1px solid #E7E4DD;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#8A8F95;text-transform:uppercase;min-width:900px;">
+              <sc-for list="{{ repCols }}" as="rc" hint-placeholder-count="6"><span>{{ rc }}</span></sc-for>
+            </div>
+            <sc-for list="{{ repRows }}" as="rr" hint-placeholder-count="12">
+              <div style="display:grid;grid-template-columns:{{ repGrid }};gap:10px;align-items:center;padding:9px 18px;border-bottom:1px solid #F0EEE8;min-width:900px;">
+                <sc-for list="{{ rr.cells }}" as="cl" hint-placeholder-count="6">
+                  <span style="font-size:12.5px;font-weight:{{ cl.fw }};color:{{ cl.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ cl.t }}</span>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:10px 18px;font-size:12px;color:#8A8F95;">{{ repFoot }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:start;">
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Health Score Weights</div>
+            <div style="font-size:12px;color:#8A8F95;margin-top:2px;">Must total 100 — applied everywhere instantly</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+              <sc-for list="{{ setWeights }}" as="w" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="flex:1;font-size:13px;font-weight:600;">{{ w.label }}</span>
+                  <input value="{{ w.v }}" onChange="{{ w.set }}" style="width:52px;box-sizing:border-box;padding:6px 8px;border:1px solid #DAD6CD;border-radius:8px;font-size:13.5px;font-weight:700;text-align:right;">
+                  <span style="font-size:12px;color:#8A8F95;width:12px;">%</span>
+                </div>
+              </sc-for>
+              <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid #EFEDE7;font-size:13px;font-weight:800;">
+                <span>Total</span><span style="color:{{ setWTotColor }};">{{ setWTot }}%</span>
+              </div>
+            </div>
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;margin-top:18px;">Thresholds</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+              <sc-for list="{{ setNums }}" as="n" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="flex:1;font-size:13px;font-weight:600;">{{ n.label }}</span>
+                  <input value="{{ n.v }}" onChange="{{ n.set }}" style="width:52px;box-sizing:border-box;padding:6px 8px;border:1px solid #DAD6CD;border-radius:8px;font-size:13.5px;font-weight:700;text-align:right;">
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:11.5px;color:#8A8F95;margin-top:12px;line-height:1.5;">Certification rules: Bronze = all Level 1 courses passed · Silver = Bronze + a certified specialist track or an approved AIA presenter · Gold = Bronze + both.</div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Level 1 Required Courses</div>
+            <div style="font-size:12px;color:#8A8F95;margin-top:2px;">One per line — drives Bronze certification and the Training view</div>
+            <textarea value="{{ setCourses }}" onChange="{{ onSetCourses }}" rows="7" style="width:100%;box-sizing:border-box;margin-top:10px;padding:9px 10px;border:1px solid #DAD6CD;border-radius:8px;font-size:12.5px;line-height:1.6;resize:vertical;"></textarea>
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;margin-top:16px;">Specialist Tracks</div>
+            <textarea value="{{ setTracks }}" onChange="{{ onSetTracks }}" rows="6" style="width:100%;box-sizing:border-box;margin-top:8px;padding:9px 10px;border:1px solid #DAD6CD;border-radius:8px;font-size:12.5px;line-height:1.6;resize:vertical;"></textarea>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Dropdown Options</div>
+            <div style="font-size:12px;color:#8A8F95;margin-top:2px;">One per line — these feed every select in the app</div>
+            <sc-for list="{{ setLists }}" as="l" hint-placeholder-count="4">
+              <div style="margin-top:12px;">
+                <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">{{ l.label }}</div>
+                <textarea value="{{ l.v }}" onChange="{{ l.set }}" rows="{{ l.rows }}" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #DAD6CD;border-radius:8px;font-size:12px;line-height:1.55;resize:vertical;"></textarea>
+              </div>
+            </sc-for>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #EFEDE7;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:15px;">Move data between devices</div>
+              <div style="font-size:12px;color:#8A8F95;margin-top:4px;line-height:1.5;">Download a backup here, then restore it on the other device (or send it to a colleague). Restoring replaces that browser's data.</div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                <button onClick="{{ exportData }}" style="padding:8px 14px;background:#1F3864;border:none;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:12.5px;font-weight:700;color:#FFFFFF;cursor:pointer;" style-hover="background:#16294B;">⬇ Download backup</button>
+                <label style="display:inline-block;padding:8px 14px;border:1px solid #DAD6CD;background:#FAF9F6;border-radius:8px;font-size:12.5px;font-weight:700;color:#4A4F55;cursor:pointer;">
+                  ⬆ Restore backup…
+                  <input type="file" accept=".json" onChange="{{ onRestoreFile }}" style="display:none;">
+                </label>
+              </div>
+              <div style="font-size:12px;color:#8A8F95;line-height:1.5;margin-top:14px;padding-top:12px;border-top:1px solid #EFEDE7;">Data is saved in this browser. Reset restores the shipped H2 2026 dataset and discards local edits.</div>
+              <button onClick="{{ resetData }}" style="margin-top:10px;padding:8px 14px;border:1px solid #E3C4C2;background:#FFFFFF;color:#C0433F;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;" style-hover="background:#FBF1F0;">Reset all data to defaults</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isGuide }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid #1F3864;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:800;font-size:15px;letter-spacing:0.04em;">DAILY — 10 minutes</div>
+            <ol style="margin:12px 0 0;padding-left:18px;font-size:13px;line-height:1.75;color:#4A4F55;">
+              <li><b>Cadence</b>: work the red rows top-down. Call or email, then hit <i>Touched today</i>.</li>
+              <li><b>Cold Calls</b>: clear any follow-up dated today or earlier (shown red).</li>
+              <li>Log anything new the moment it happens — opps, spec activity, CEU events.</li>
+            </ol>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid #5D9732;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:800;font-size:15px;letter-spacing:0.04em;">WEEKLY — 30 minutes, Monday</div>
+            <ol style="margin:12px 0 0;padding-left:18px;font-size:13px;line-height:1.75;color:#4A4F55;">
+              <li><b>Sales Import Center</b>: upload Monday's bookings report; confirm the matches.</li>
+              <li><b>Agencies</b>: scan health scores; open the 3 lowest and update priority + blocker.</li>
+              <li><b>Opportunities</b>: advance stages; every open opp needs a real next step.</li>
+              <li><b>Spec Pipeline</b>: confirm each spec moved or has a dated action.</li>
+              <li><b>AIA CEU</b>: close open follow-ups; nudge presenters mid-pipeline.</li>
+              <li><b>LinkedIn</b>: draft this week's two posts.</li>
+            </ol>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-top:3px solid #C49F06;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:800;font-size:15px;letter-spacing:0.04em;">MONTHLY — 1 hour, first Friday</div>
+            <ol style="margin:12px 0 0;padding-left:18px;font-size:13px;line-height:1.75;color:#4A4F55;">
+              <li><b>Overview</b>: read the variance matrix; note months slipping vs goal.</li>
+              <li><b>Training</b>: assign next courses; chase overdue and failed quizzes.</li>
+              <li><b>Reports</b>: export the Agency Scorecard CSV for the leadership readout.</li>
+              <li><b>Agencies</b>: re-tier / re-categorize anyone whose trajectory changed.</li>
+              <li><b>Calendar</b>: confirm next month's trips against Fix/Build priorities.</li>
+            </ol>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:14px;align-items:start;">
+          <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+            <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Definitions</div>
+            <div style="display:grid;grid-template-columns:150px 1fr;gap:8px 14px;margin-top:12px;font-size:13px;line-height:1.55;color:#4A4F55;">
+              <b>Health Score</b><span>Weighted 0–100 composite: Revenue pacing, Opportunities, Training, CEU/AIA, Strategic accounts, Reporting compliance. Weights live in Settings; the per-agency breakdown is on each agency page.</span>
+              <b>Revenue pacing</b><span>YTD 2026 vs the same months of 2025. New agencies with revenue score 80; new with none score 35.</span>
+              <b>Reporting compliance</b><span>Days since last logged touch: ≤14d = 100 · ≤30d = 70 · ≤60d = 40 · beyond = 10.</span>
+              <b>Category</b><span>Protect = keep close, don't break it · Build = invest to grow · Push = demand more from existing capacity · Fix = behavioral or structural problem · Exit = transition out.</span>
+              <b>Spec stages</b><span>Target Identified → Specifier Engaged → Basis of Design → Named Specification → Bid Stage → Awarded. A spec is only "Named" when XtraLight appears on the drawing.</span>
+              <b>Bronze / Silver / Gold</b><span>Bronze = all Level 1 courses passed (quiz ≥ pass mark). Silver = Bronze + a certified specialist track <i>or</i> an approved AIA presenter. Gold = Bronze + both.</span>
+              <b>Cadence flags</b><span>Green ≤14 days since touch · Yellow 15–30 · Red &gt;30 or never — red rows are the day's call list.</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Data Hygiene Rules</div>
+              <ul style="margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.75;color:#4A4F55;">
+                <li>Notes format: <b>Date – Who – What – Next</b>. No note without a next.</li>
+                <li>Every open opportunity has an owner and a dated next step.</li>
+                <li>Value "TBD" is allowed for 30 days, then estimate or kill it.</li>
+                <li>CEU events get follow-up within 5 business days — no exceptions.</li>
+                <li>Status dots are yours: Green = on plan, Yellow = watch, Red = act this week.</li>
+              </ul>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Good to Know</div>
+              <ul style="margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.75;color:#4A4F55;">
+                <li><b>Every Monday:</b> upload the ERP "Order Bookings Summary by Sales Person" in the <b>Sales Import Center</b>: choose file → check matches → confirm. Each upload becomes a snapshot; roll back any upload from Upload History.</li>
+                <li>Everything saves automatically to this browser as you type.</li>
+                <li>Click any agency name anywhere to jump to its full page.</li>
+                <li>All six reports export exactly what's on screen as CSV.</li>
+                <li>Dropdown choices, courses, weights and pass marks are editable in Settings.</li>
+                <li>Reset (in Settings) restores the shipped dataset if things get messy.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isImports }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;padding:18px 20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Upload ERP Sales Report</div>
+              <div style="font-size:12.5px;color:#6B7076;margin-top:2px;">Sales Order Bookings Summary by Salesperson — PDF, Excel (.xlsx) or CSV. Works on desktop and mobile.</div>
+            </div>
+            <label style="display:inline-block;padding:10px 18px;background:#1F3864;border-radius:8px;font-size:13.5px;font-weight:700;color:#FFFFFF;cursor:pointer;">
+              Choose file…
+              <input type="file" accept=".pdf,.xlsx,.xls,.csv" onChange="{{ onImpFile }}" style="display:none;">
+            </label>
+          </div>
+          <sc-if value="{{ impBusy }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;font-size:13px;font-weight:700;color:#1F3864;">Reading file…</div>
+          </sc-if>
+          <sc-if value="{{ impErr }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;padding:10px 14px;background:#FBEAE9;border:1px solid #EBC7C5;border-radius:8px;font-size:13px;font-weight:600;color:#B23E3A;">{{ impErr }}</div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ impPreview }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFFFFF;border:1px solid #1F3864;border-radius:12px;overflow:hidden;margin-top:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 18px;">
+              <div>
+                <div style="font-family:'Montserrat';font-weight:700;font-size:16px;">Preview — {{ impFile }}</div>
+                <div style="font-size:12.5px;color:#6B7076;margin-top:2px;">{{ impSummary }} · Check the agency matches, then confirm. Nothing updates until you confirm.</div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <span style="font-size:12px;font-weight:700;color:#8A8F95;">Period label</span>
+                <input value="{{ impPeriod }}" onChange="{{ onImpPeriod }}" style="width:110px;padding:7px 10px;border:1px solid #DAD6CD;border-radius:8px;font-size:13px;font-weight:700;">
+                <button onClick="{{ impCancel }}" style="padding:9px 14px;border:1px solid #DAD6CD;background:#FFFFFF;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#4A4F55;cursor:pointer;" style-hover="background:#F5F4F0;">Cancel</button>
+                <button onClick="{{ impConfirm }}" style="padding:9px 18px;background:#2E7D46;border:none;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#FFFFFF;cursor:pointer;" style-hover="background:#256A3A;">✓ Confirm import</button>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:0.6fr 1.4fr 1.5fr 0.9fr 0.6fr 0.65fr 0.65fr;gap:10px;padding:8px 18px;background:#FAF9F6;border-top:1px solid #E7E4DD;border-bottom:1px solid #E7E4DD;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#8A8F95;text-transform:uppercase;">
+              <span>Code</span><span>Name in Report</span><span>Match to Agency</span><span style="text-align:right;">Net Bookings</span><span style="text-align:right;">Added</span><span style="text-align:right;">Changed</span><span style="text-align:right;">Deleted</span>
+            </div>
+            <sc-for list="{{ impRows }}" as="r" hint-placeholder-count="10">
+              <div style="display:grid;grid-template-columns:0.6fr 1.4fr 1.5fr 0.9fr 0.6fr 0.65fr 0.65fr;gap:10px;align-items:center;padding:7px 18px;border-bottom:1px solid #F0EEE8;background:{{ r.bg }};">
+                <span style="font-size:12px;color:#6B7076;">{{ r.code }}</span>
+                <span style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</span>
+                <select ref="{{ r.refMatch }}" onChange="{{ r.setMatch }}" style="border:1px solid {{ r.mBorder }};border-radius:6px;padding:4px 4px;font-size:12px;font-weight:600;background:{{ r.mBg }};cursor:pointer;min-width:0;">
+                  <option value="__skip">— Skip this row —</option>
+                  <option value="__new">＋ Create new agency</option>
+                  <sc-for list="{{ agentNames }}" as="an" hint-placeholder-count="5"><option value="{{ an }}">{{ an }}</option></sc-for>
+                </select>
+                <span style="text-align:right;font-family:'Montserrat';font-weight:700;font-size:13.5px;color:{{ r.netColor }};">{{ r.net }}</span>
+                <span style="text-align:right;font-size:12.5px;">{{ r.added }}</span>
+                <span style="text-align:right;font-size:12.5px;">{{ r.changed }}</span>
+                <span style="text-align:right;font-size:12.5px;">{{ r.deleted }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="background:#FFFFFF;border:1px solid #E7E4DD;border-radius:12px;overflow:hidden;margin-top:14px;">
+          <div style="padding:14px 18px 10px;font-family:'Montserrat';font-weight:700;font-size:16px;">Upload History</div>
+          <sc-if value="{{ impNoHistory }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:8px 18px 18px;font-size:13px;color:#8A8F95;">No Data Available — upload your first ERP report above.</div>
+          </sc-if>
+          <sc-if value="{{ impHasHistory }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:1.6fr 0.8fr 0.8fr 0.7fr 0.8fr 0.8fr 1.4fr;gap:10px;padding:8px 18px;background:#FAF9F6;border-top:1px solid #E7E4DD;border-bottom:1px solid #E7E4DD;font-size:11px;font-weight:700;letter-spacing:0.05em;color:#8A8F95;text-transform:uppercase;">
+              <span>File</span><span>Period</span><span>Uploaded</span><span>Records</span><span>By</span><span>Status</span><span></span>
+            </div>
+            <sc-for list="{{ impHistRows }}" as="h" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.6fr 0.8fr 0.8fr 0.7fr 0.8fr 0.8fr 1.4fr;gap:10px;align-items:center;padding:9px 18px;border-bottom:1px solid #F0EEE8;">
+                <span style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ h.file }}</span>
+                <span style="font-size:12.5px;font-weight:700;color:#1F3864;">{{ h.period }}</span>
+                <span style="font-size:12.5px;color:#6B7076;">{{ h.date }}</span>
+                <span style="font-size:12.5px;font-weight:700;">{{ h.records }}</span>
+                <span style="font-size:12.5px;color:#6B7076;">{{ h.by }}</span>
+                <span><span style="font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px;background:{{ h.stBg }};color:{{ h.stFg }};">{{ h.status }}</span></span>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                  <button onClick="{{ h.rollback }}" style="border:1px solid #DAD6CD;background:#FAF9F6;border-radius:8px;padding:4px 10px;font-family:'Montserrat',sans-serif;font-size:11.5px;font-weight:700;color:#4A4F55;cursor:pointer;" style-hover="background:#EFEDE7;">{{ h.rbLabel }}</button>
+                  <button onClick="{{ h.del }}" style="border:none;background:transparent;color:#B9B4A9;font-size:14px;cursor:pointer;padding:2px;" style-hover="color:#D9534F;">✕</button>
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!--MORE-->
+     </div>
+    </div>
+  </div>
+  <sc-if value="{{ showLogin }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:100;background:#101C33;display:flex;align-items:center;justify-content:center;padding:20px;">
+      <div style="width:360px;max-width:94vw;background:#FFFFFF;border-radius:14px;padding:28px;">
+        <img src="assets/os-logo.png" alt="Channel OS" style="display:block;width:72px;height:72px;border-radius:16px;margin-bottom:18px;">
+        <div style="font-family:'Montserrat';font-weight:800;font-size:19px;">Channel OS <span style="font-size:10px;font-weight:700;color:#D2545E;letter-spacing:0.1em;">DEMO</span></div>
+        <div style="font-size:13px;color:#6B7076;margin-top:2px;">Sign in to access the dashboard</div>
+        <div style="margin-top:16px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Email</div>
+          <input type="email" value="{{ loginEmail }}" onChange="{{ onLoginEmail }}" autocomplete="username" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #DAD6CD;border-radius:8px;font-size:14px;">
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#8A8F95;margin-bottom:4px;">Password</div>
+          <input type="password" value="{{ loginPass }}" onChange="{{ onLoginPass }}" onKeyDown="{{ onLoginKey }}" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #DAD6CD;border-radius:8px;font-size:14px;">
+        </div>
+        <sc-if value="{{ loginErr }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:12px;padding:9px 12px;background:#FBEAE9;border:1px solid #EBC7C5;border-radius:8px;font-size:12.5px;font-weight:600;color:#B23E3A;">{{ loginErr }}</div>
+        </sc-if>
+        <button onClick="{{ doLogin }}" style="width:100%;margin-top:16px;padding:12px;background:#1F3864;border:none;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;color:#FFFFFF;cursor:pointer;" style-hover="background:#16294B;">{{ loginBtnLabel }}</button>
+        <div style="font-size:11.5px;color:#8A8F95;margin-top:14px;line-height:1.5;">Accounts are managed in the Firebase console (Authentication → Users). Data syncs live across all signed-in devices.</div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ navOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ toggleNav }}" style="position:fixed;inset:0;background:rgba(16,28,51,0.5);z-index:60;"></div>
+    <div style="position:fixed;top:0;left:0;bottom:0;z-index:70;width:250px;background:#101C33;display:flex;flex-direction:column;padding:16px 12px;gap:1px;overflow:auto;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <img src="assets/os-logo.png" alt="Channel OS" style="display:block;width:44px;height:44px;border-radius:10px;flex:none;">
+        <div style="font-family:'Montserrat';font-weight:800;font-size:17px;color:#F4F2ED;letter-spacing:0.02em;">Channel OS <span style="font-size:10px;font-weight:700;color:#D2545E;letter-spacing:0.1em;">DEMO</span></div>
+      </div>
+      <sc-for list="{{ nav }}" as="nv" hint-placeholder-count="16">
+        <sc-if value="{{ nv.hdr }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:11px 12px 3px;font-size:10px;font-weight:700;letter-spacing:0.14em;color:#565D66;">{{ nv.label }}</div>
+        </sc-if>
+        <sc-if value="{{ nv.item }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ nv.go }}" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:{{ nv.color }};background:{{ nv.bg }};">
+            <span>{{ nv.label }}</span>
+            <span style="font-size:11px;font-weight:700;color:{{ nv.countColor }};">{{ nv.count }}</span>
+          </div>
+        </sc-if>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;overview&quot;,&quot;options&quot;:[&quot;overview&quot;,&quot;agents&quot;,&quot;opps&quot;,&quot;specs&quot;,&quot;cadence&quot;,&quot;training&quot;,&quot;ceu&quot;,&quot;yoy&quot;,&quot;calendar&quot;,&quot;calls&quot;,&quot;linkedin&quot;,&quot;reports&quot;,&quot;guide&quot;,&quot;settings&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;healthGreenOverride&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;number | null&quot;}}">
+class Component extends DCLogic {
+  state = { view: 'overview', q: '', catFilter: 'All', sel: -1, data: null, trFilter: 'All', repTab: 'scorecard', repAgency: 'All', ceuTab: 'presenters', isMobile: false, navOpen: false, imp: null, impBusy: false, impErr: '', user: undefined, loginEmail: '', loginPass: '', loginErr: '', loginBusy: false, syncErr: '' };
+
+  fbConfig() {
+    return {
+      apiKey: "AIzaSyBArCz3EwRoroQiz8TmlvXP0LiraYoUFD4",
+      authDomain: "agent-dashboard-95a62.firebaseapp.com",
+      projectId: "agent-dashboard-95a62",
+      storageBucket: "agent-dashboard-95a62.firebasestorage.app",
+      messagingSenderId: "743932431643",
+      appId: "1:743932431643:web:a5df01215a7b5faac157be",
+    };
+  }
+
+  loadLocal() {
+    const defaults = JSON.parse(JSON.stringify(window.XTL_DATA));
+    // Seeded demo data removed — only uploaded or user-entered records are shown.
+    defaults.training = []; defaults.trainingRecs = []; defaults.ceuProfiles = []; defaults.ceuEvents = []; defaults.specialist = [];
+    defaults.uploads = defaults.uploads || [];
+    let data = defaults;
+    try {
+      const saved = localStorage.getItem('xtl_demo_v1');
+      if (saved) {
+        const s = JSON.parse(saved);
+        if ((s.v || 0) < 6) { delete s.training; delete s.trainingRecs; delete s.ceuProfiles; delete s.ceuEvents; delete s.specialist; }
+        data = Object.assign({}, defaults, s);
+        if ((s.v || 0) < 7) {
+          const byName = {}; defaults.agents.forEach(a => { byName[a.n] = a; });
+          (data.agents || []).forEach(a => { const d0 = byName[a.n]; if (d0) a.ytd = d0.ytd; });
+        }
+        data.v = defaults.v;
+        const savedUps = s.uploads || [], del = s.deletedUploads || [];
+        const have = {}; savedUps.forEach(u => { have[u.id] = 1; }); del.forEach(id => { have[id] = 1; });
+        data.uploads = defaults.uploads.filter(u => !have[u.id]).concat(savedUps);
+        data.deletedUploads = del;
+        data.settings = Object.assign({}, defaults.settings, s.settings || {});
+        localStorage.setItem('xtl_demo_v1', JSON.stringify(data));
+      }
+    } catch (e) {}
+    return data;
+  }
+  componentDidMount() {
+    this._bootStart = Date.now();
+    const boot = () => {
+      if (!window.XTL_DATA) { setTimeout(boot, 60); return; }
+      // wait up to 6s for the Firebase SDK before falling back to local-only mode
+      
+      const local = this.loadLocal();
+      const view = this.props.defaultView ?? 'overview';
+      if (false) {
+        try {
+          if (!firebase.apps.length) firebase.initializeApp(this.fbConfig());
+          this.fb = { auth: firebase.auth(), db: firebase.firestore() };
+          this.fb.auth.onAuthStateChanged(u => {
+            if (this._unsub) { this._unsub(); this._unsub = null; }
+            if (!u) { this.setState({ user: null, data: local, view }); return; }
+            this.setState({ user: { email: u.email }, view });
+            const ref = this.fb.db.collection('channelos').doc('data');
+            this._unsub = ref.onSnapshot(snap => {
+              if (snap.metadata.hasPendingWrites) return;
+              if (snap.exists) {
+                try {
+                  const remote = JSON.parse(snap.data().json);
+                  this.setState({ data: remote, syncErr: '' });
+                  try { localStorage.setItem('xtl_demo_v1', JSON.stringify(remote)); } catch (e) {}
+                } catch (e) { this.setState({ syncErr: 'Cloud data unreadable: ' + e.message, data: this.state.data || local }); }
+              } else {
+                // first sign-in: seed the cloud with this browser's data
+                ref.set({ json: JSON.stringify(local), updated: Date.now(), by: u.email });
+                this.setState({ data: local });
+              }
+            }, err => this.setState({ syncErr: 'Sync error: ' + err.message, data: this.state.data || local }));
+          });
+          return;
+        } catch (e) {}
+      }
+      this.setState({ user: 'local', data: local, view });
+    };
+    boot();
+    this._mq = () => { const m = window.innerWidth < 760; if (m !== this.state.isMobile) this.setState({ isMobile: m }); };
+    window.addEventListener('resize', this._mq); this._mq();
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this._mq); if (this._unsub) this._unsub(); }
+  doLogin() {
+    const S = this.state;
+    if (!this.fb || S.loginBusy) return;
+    if (!S.loginEmail || !S.loginPass) { this.setState({ loginErr: 'Enter your email and password.' }); return; }
+    this.setState({ loginBusy: true, loginErr: '' });
+    this.fb.auth.signInWithEmailAndPassword(S.loginEmail.trim(), S.loginPass)
+      .then(() => this.setState({ loginBusy: false, loginPass: '' }))
+      .catch(err => {
+        const msg = /invalid-credential|wrong-password|user-not-found/.test(err.code || '') ? 'Email or password is incorrect.' : (err.message || 'Sign-in failed.');
+        this.setState({ loginBusy: false, loginErr: msg });
+      });
+  }
+  pushCloud(d) {
+    if (!this.fb || !this.state.user || this.state.user === 'local') return;
+    clearTimeout(this._pt);
+    this._pt = setTimeout(() => {
+      this.fb.db.collection('channelos').doc('data')
+        .set({ json: JSON.stringify(d), updated: Date.now(), by: this.state.user.email })
+        .catch(err => this.setState({ syncErr: 'Save failed: ' + err.message }));
+    }, 600);
+  }
+
+  // ---- Bookings (from ERP uploads) ----
+  snapshots() {
+    return (this.state.data.uploads || []).filter(u => u.status === 'Imported').slice().sort((a, b) => (a.date || 0) - (b.date || 0));
+  }
+  bookingsFor(name) {
+    const snaps = this.snapshots();
+    const cur = snaps.length ? snaps[snaps.length - 1] : null;
+    const prev = snaps.length > 1 ? snaps[snaps.length - 2] : null;
+    const rowOf = u => u ? (u.rows || []).find(r => r.agency === name) : null;
+    const c = rowOf(cur), p = rowOf(prev);
+    return { cur: c, prev: p, curUpload: cur, prevUpload: prev };
+  }
+  growthPct(cur, prev) {
+    if (prev == null || prev === 0) return cur > 0 ? null : 0;
+    return (cur - prev) / Math.abs(prev);
+  }
+
+  // ---- Trip ↔ agency matching (fuzzy on trip description) ----
+  tripsFor(name) {
+    const at = this.normName(name);
+    const tokMatch = (a, b) => a === b || (a.length >= 3 && b.indexOf(a) === 0 && b.length - a.length <= 2) || (b.length >= 3 && a.indexOf(b) === 0 && a.length - b.length <= 2);
+    return (this.state.data.trips || []).map((t, i) => ({ t, i }))
+      .filter(x => x.t.status === 'Scheduled' && this.normName(x.t.who).some(tok => at.some(a => tokMatch(tok, a))));
+  }
+
+  // ---- ERP report parsing ----
+  normName(s) {
+    const stop = ['lighting', 'light', 'sales', 'group', 'llc', 'inc', 'corp', 'company', 'co', 'associates', 'assoc', 'the', 'of', 'and', 'agency', 'agents', 'systems', 'corporation'];
+    return String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t && stop.indexOf(t) < 0);
+  }
+  matchAgent(name) {
+    const toks = this.normName(name);
+    if (!toks.length) return '';
+    let best = '', bestScore = 0, ties = 0;
+    this.state.data.agents.forEach(a => {
+      const at = this.normName(a.n);
+      if (!at.length) return;
+      const shared = toks.filter(t => at.some(x => x === t || x.indexOf(t) === 0 || t.indexOf(x) === 0)).length;
+      const score = shared / Math.max(toks.length, at.length);
+      if (score > bestScore) { best = a.n; bestScore = score; ties = 1; }
+      else if (score === bestScore && score > 0) ties++;
+    });
+    return bestScore >= 0.45 && ties === 1 ? best : (bestScore >= 0.75 ? best : '');
+  }
+  parseNum(v) {
+    if (typeof v === 'number') return v;
+    let s = String(v == null ? '' : v).trim();
+    if (!s) return null;
+    const neg = /^\(.*\)$/.test(s) || /^-/.test(s);
+    s = s.replace(/[$,()%\s]/g, '').replace(/^-/, '');
+    const n = parseFloat(s);
+    if (isNaN(n)) return null;
+    return neg ? -n : n;
+  }
+  parseGrid(grid, fileName) {
+    // find header row
+    let hIdx = -1, cols = null;
+    const find = (cells, res) => cells.findIndex(c => res.some(re => re.test(String(c || '').toLowerCase())));
+    for (let i = 0; i < Math.min(grid.length, 30); i++) {
+      const cells = grid[i].map(c => String(c || ''));
+      const nameC = find(cells, [/agency/, /salesperson/, /sales\s*person/, /^name$/, /rep\b/, /customer/]);
+      const netC = find(cells, [/net.*book/, /booking/, /net\s*amount/, /^net$/, /total.*book/, /amount/]);
+      if (nameC >= 0 && netC >= 0 && nameC !== netC) {
+        hIdx = i;
+        cols = {
+          code: find(cells, [/code/, /^id$/, /number/, /^no\.?$/]),
+          name: nameC, net: netC,
+          added: find(cells, [/add/]), changed: find(cells, [/chang/]), deleted: find(cells, [/delet/, /cancel/]),
+        };
+        break;
+      }
+    }
+    if (hIdx < 0) {
+      // heuristic: rows of [text..., numbers...] — take first text col as name, first big number as net
+      const rows = [];
+      grid.forEach(r => {
+        const texts = r.map((c, i) => ({ c, i })).filter(x => typeof x.c === 'string' && x.c.trim() && this.parseNum(x.c) == null);
+        const nums = r.map((c, i) => ({ v: this.parseNum(c), i })).filter(x => x.v != null);
+        if (texts.length && nums.length && !/total|grand|page|report|period/i.test(texts[0].c)) {
+          rows.push({ code: '', name: texts[0].c.trim(), sp: '', net: nums[0].v, added: nums[1] ? nums[1].v : null, changed: nums[2] ? nums[2].v : null, deleted: nums[3] ? nums[3].v : null });
+        }
+      });
+      if (!rows.length) return { err: 'Could not find a bookings table in ' + fileName + '. Expected columns like Agency/Salesperson and Net Bookings. Try the Excel or CSV version of the report.' };
+      return { rows };
+    }
+    const rows = [];
+    for (let i = hIdx + 1; i < grid.length; i++) {
+      const r = grid[i];
+      const name = String(r[cols.name] || '').trim();
+      if (!name) continue;
+      if (/^(grand\s*)?total/i.test(name)) continue;
+      const net = this.parseNum(r[cols.net]);
+      if (net == null) continue;
+      rows.push({
+        code: cols.code >= 0 ? String(r[cols.code] || '').trim() : '',
+        name, sp: '',
+        net,
+        added: cols.added >= 0 ? this.parseNum(r[cols.added]) : null,
+        changed: cols.changed >= 0 ? this.parseNum(r[cols.changed]) : null,
+        deleted: cols.deleted >= 0 ? this.parseNum(r[cols.deleted]) : null,
+      });
+    }
+    if (!rows.length) return { err: 'Found the header row but no data rows in ' + fileName + '.' };
+    return { rows };
+  }
+  async handleImportFile(file) {
+    this.setState({ impBusy: true, impErr: '', imp: null });
+    try {
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      let grid = null;
+      if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+        if (!window.XLSX) throw new Error('Spreadsheet reader is still loading — try again in a moment.');
+        const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        grid = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+      } else if (ext === 'pdf') {
+        if (!window.pdfjsLib) throw new Error('PDF reader is still loading — try again in a moment.');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+        grid = [];
+        for (let p = 1; p <= doc.numPages; p++) {
+          const tc = await (await doc.getPage(p)).getTextContent();
+          const lines = {};
+          tc.items.forEach(it => {
+            const y = Math.round(it.transform[5] / 3) * 3;
+            (lines[y] = lines[y] || []).push({ x: it.transform[4], s: it.str });
+          });
+          Object.keys(lines).map(Number).sort((a, b) => b - a).forEach(y => {
+            const cells = []; let lastX = null;
+            lines[y].sort((a, b) => a.x - b.x).forEach(it => {
+              if (lastX != null && it.x - lastX < 18 && cells.length) cells[cells.length - 1] += ' ' + it.s;
+              else cells.push(it.str);
+              lastX = it.x + it.s.length * 5;
+            });
+            if (cells.join('').trim()) grid.push(cells);
+          });
+        }
+      } else throw new Error('Unsupported file type ".' + ext + '". Use PDF, .xlsx or .csv.');
+      const res = this.parseGrid(grid, file.name);
+      if (res.err) { this.setState({ impBusy: false, impErr: res.err }); return; }
+      const now = new Date();
+      const period = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()] + ' ' + now.getDate() + ' ' + now.getFullYear();
+      const rows = res.rows.map(r => Object.assign({}, r, { match: this.matchAgent(r.name) || '__skip' }));
+      this.setState({ impBusy: false, imp: { fileName: file.name, period, rows } });
+    } catch (e) {
+      this.setState({ impBusy: false, impErr: 'Could not read the file: ' + (e.message || e) });
+    }
+  }
+
+  mut(fn) {
+    const d = JSON.parse(JSON.stringify(this.state.data));
+    fn(d);
+    try { localStorage.setItem('xtl_demo_v1', JSON.stringify(d)); } catch (e) {}
+    this.setState({ data: d });
+    this.pushCloud(d);
+  }
+
+  fmtK(v) {
+    if (v == null || isNaN(v)) return '—';
+    if (Math.abs(v) >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M';
+    if (Math.abs(v) >= 1e3) return '$' + Math.round(v / 1e3) + 'K';
+    return '$' + Math.round(v);
+  }
+  fmtFull(v) { return v ? '$' + Math.round(v).toLocaleString() : '—'; }
+  fmtDate(s) {
+    if (!s) return '—';
+    if (typeof s === 'string') return s;
+    const d = new Date(Date.UTC(1899, 11, 30) + s * 86400000);
+    return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()] + ' ' + d.getUTCDate();
+  }
+  today() { return Math.floor((Date.now() - Date.UTC(1899, 11, 30)) / 86400000); }
+  yoyOf(a) {
+    if (!a.prev) return a.ytd > 0 ? 'NEW' : '—';
+    const p = (a.ytd - a.prev) / a.prev;
+    return (p >= 0 ? '+' : '') + Math.round(p * 100) + '%';
+  }
+  yoyColor(a) {
+    if (!a.prev) return a.ytd > 0 ? '#2E8B57' : '#8A8F95';
+    return a.ytd >= a.prev ? '#2E8B57' : '#C0433F';
+  }
+
+  // ---- Health scoring (weights editable in Settings) ----
+  healthParts(a) {
+    const d = this.state.data, st = d.settings || {};
+    const monthsElapsed = Math.max(1, d.yoy.filter(m => m.y26 > 0).length);
+    const c = (d.ceuProfiles || []).find(x => x.agent === a.n);
+    const opps = (d.opps || []).filter(o => o.agent === a.n && o.stage !== 'Won' && o.stage !== 'Lost').length;
+    const specs = (d.specs || []).filter(s => s.agent === a.n && s.stage !== 'Lost').length;
+    let rev;
+    if (!a.prev) rev = a.ytd > 0 ? 80 : 35;
+    else rev = Math.max(0, Math.min(100, Math.round(a.ytd / (a.prev * monthsElapsed / 12) * 100)));
+    const opp = Math.min(100, opps * 30 + (a.pipe > 0 ? 40 : 0));
+    const courses = st.courseList || [];
+    const pass = st.quizPass ?? 80;
+    const doneCourses = courses.filter(cs => (d.trainingRecs || []).some(r => r.agent === a.n && r.course === cs && r.status === 'Completed' && (r.quiz == null || r.quiz >= pass))).length;
+    const tr = courses.length ? Math.round(doneCourses / courses.length * 100) : 0;
+    let ceu = 0;
+    if (c) { ceu = c.approved ? 70 : c.presTraining ? 45 : c.acct ? 25 : 0; ceu = Math.min(100, ceu + (c.delivered || 0) * 10); }
+    const strat = Math.min(100, specs * 35);
+    const days = a.last ? this.today() - a.last : 999;
+    const rep = days <= 14 ? 100 : days <= 30 ? 70 : days <= 60 ? 40 : 10;
+    // Booking performance modifier (± settings.bookingMod pts) from latest vs prior ERP upload
+    let bkMod = 0;
+    const bk = this.bookingsFor(a.n);
+    if (bk.cur && bk.prev) {
+      const g = this.growthPct(bk.cur.net, bk.prev.net);
+      if (g != null) bkMod = Math.max(-1, Math.min(1, g / 0.5)) * (st.bookingMod ?? 10);
+      bkMod += Math.max(-0.3, Math.min(0.3, ((bk.cur.added || 0) - (bk.cur.deleted || 0)) / 20)) * (st.bookingMod ?? 10) * 0.3;
+    } else if (bk.cur && !bk.prev) {
+      bkMod = bk.cur.net > 0 ? (st.bookingMod ?? 10) * 0.3 : 0;
+    }
+    return { rev, opp, tr, ceu, strat, rep, bkMod: Math.round(bkMod) };
+  }
+  health(a) {
+    const w = (this.state.data.settings || {}).weights || { rev: 35, opp: 20, training: 15, ceu: 15, strategic: 10, reporting: 5 };
+    const p = this.healthParts(a);
+    const tot = (w.rev + w.opp + w.training + w.ceu + w.strategic + w.reporting) || 100;
+    const base = (p.rev * w.rev + p.opp * w.opp + p.tr * w.training + p.ceu * w.ceu + p.strat * w.strategic + p.rep * w.reporting) / tot;
+    return Math.max(0, Math.min(100, Math.round(base + p.bkMod)));
+  }
+  healthBand(h) {
+    const st = this.state.data.settings || {};
+    const g = st.healthGreen ?? 70, y = st.healthYellow ?? 45;
+    return h >= g ? ['#E4F2E8', '#2E7D46'] : h >= y ? ['#FBF0DA', '#9A6A08'] : ['#FBEAE9', '#B23E3A'];
+  }
+  // ---- Certification level (Bronze/Silver/Gold, rules in User Guide/Settings) ----
+  certLevel(name) {
+    const d = this.state.data, st = d.settings || {};
+    const pass = st.quizPass ?? 80;
+    const courses = st.courseList || [];
+    const recs = (d.trainingRecs || []).filter(r => r.agent === name);
+    const done = courses.filter(cs => recs.some(r => r.course === cs && r.status === 'Completed' && (r.quiz == null || r.quiz >= pass)));
+    if (courses.length === 0 || done.length < courses.length) return { level: 'Not Certified', done: done.length, total: courses.length };
+    const spec = (d.specialist || []).some(s => s.agent === name && s.certified);
+    const c = (d.ceuProfiles || []).find(x => x.agent === name);
+    const pres = !!(c && c.approved);
+    if (spec && pres) return { level: 'Gold', done: done.length, total: courses.length };
+    if (spec || pres) return { level: 'Silver', done: done.length, total: courses.length };
+    return { level: 'Bronze', done: done.length, total: courses.length };
+  }
+  certColors(level) {
+    return { Gold: ['#FBF3D9', '#8A6D08'], Silver: ['#EDEFF2', '#5A6470'], Bronze: ['#F3E7DC', '#8A5A2B'] }[level] || ['#ECEBE7', '#8A8F95'];
+  }
+  dlCSV(name, headers, rows) {
+    const esc = v => { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const txt = [headers].concat(rows).map(r => r.map(esc).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv' }));
+    a.download = name + '.csv'; a.click();
+  }
+
+  renderVals() {
+    const S = this.state, d = S.data;
+    const CAT = { Protect: ['#E3EEF9', '#2361A5'], Build: ['#E4F2E8', '#2E7D46'], Push: ['#FBF0DA', '#9A6A08'], Fix: ['#FBEAE9', '#B23E3A'], Exit: ['#ECEBE7', '#6B7076'] };
+    const DOT = { Green: '#3BA55D', Yellow: '#E8B931', Red: '#D9534F' };
+    const STAGE = { Targeted: ['#ECEBE7', '#5A5F66'], 'Spec In': ['#E3EEF9', '#2361A5'], Quoted: ['#FBF0DA', '#9A6A08'], 'Close Watch': ['#F3E8FA', '#7B3FA0'], Waiting: ['#ECEBE7', '#6B7076'], Won: ['#E4F2E8', '#2E7D46'], Lost: ['#FBEAE9', '#B23E3A'] };
+
+    const views = [
+      ['overview', 'Portfolio Overview', ''],
+      ['agents', 'Agencies', 'All agencies — click a row for the full agency page'],
+      ['opps', 'Opportunities', 'Pipeline register — edit inline'],
+      ['specs', 'Spec Pipeline', 'Specification influence — Target → Awarded'],
+      ['cadence', 'Contact Cadence', 'Days since last touch — red needs outreach now'],
+      ['training', 'Training', 'Level 1 required courses, specialist tracks, certification'],
+      ['ceu', 'AIA CEU Portal', 'Presenter certification and CEU event log'],
+      ['yoy', 'YoY Sales', '2025 vs 2026 vs goal, by month'],
+      ['calendar', 'H2 Travel Calendar', 'Deployment & territory visits Jul–Dec'],
+      ['calls', 'Cold Call Tracker', 'Federal & specifier outreach'],
+      ['linkedin', 'LinkedIn Plan', 'H2 content cadence — 2 posts/week'],
+      ['reports', 'Reports', 'Scorecards and exports — all downloadable as CSV'],
+      ['imports', 'Sales Import Center', 'Upload ERP bookings reports — preview, confirm, CRM updates'],
+      ['guide', 'User Guide', 'How to run the Channel OS — workflows and definitions'],
+      ['settings', 'Settings', 'Weights, thresholds, dropdown options, course list'],
+    ];
+    views[0][2] = 'H2 2026 channel plan — ' + (d ? d.agents.length : 28) + ' agencies, one operating view';
+    const labels = { overview: 'Overview', agents: 'Agencies', opps: 'Opportunities', specs: 'Spec Pipeline', cadence: 'Cadence', training: 'Training', ceu: 'AIA CEU', yoy: 'YoY Sales', calendar: 'Calendar', calls: 'Cold Calls', linkedin: 'LinkedIn', reports: 'Reports', imports: 'Sales Import', guide: 'User Guide', settings: 'Settings' };
+    const counts = d ? { agents: d.agents.length, opps: d.opps.length, specs: d.specs.length, calls: d.calls.length, calendar: d.trips.length, linkedin: d.posts.length, ceu: (d.ceuEvents || []).length, imports: (d.uploads || []).filter(u => u.status === 'Imported').length || '' } : {};
+    const groups = { overview: 'SELL', training: 'DEVELOP', yoy: 'TRACK', reports: 'MANAGE' };
+    const nav = [];
+    views.forEach(([id]) => {
+      if (groups[id]) nav.push({ hdr: true, item: false, label: groups[id] });
+      nav.push({
+        hdr: false, item: true, label: labels[id], count: counts[id] || '',
+        go: () => this.setState({ view: id, sel: -1, navOpen: false }),
+        color: S.view === id ? '#F4F2ED' : '#9AA1A9',
+        bg: S.view === id ? '#22335A' : 'transparent',
+        countColor: S.view === id ? '#D2545E' : '#5C636B',
+      });
+    });
+    const cur = views.find(v => v[0] === S.view) || views[0];
+
+    const out = {
+      nav, viewTitle: cur[1], viewSub: cur[2],
+      isOverview: S.view === 'overview' && S.sel < 0,
+      isDetail: false, backToList: () => this.setState({ sel: -1 }),
+      showSearch: S.view === 'agents' && S.sel < 0, q: S.q,
+      onQ: (e) => this.setState({ q: e.target.value }),
+      addLabel: false, onAdd: () => {},
+      kpis: [], chart: [], tiers: [], catChips: [], risks: [], topOpps: [], varRows: [],
+      isMobileV: S.isMobile, navOpen: S.navOpen,
+      showLogin: S.user === null,
+      loginEmail: S.loginEmail, loginPass: S.loginPass, loginErr: S.loginErr,
+      loginBtnLabel: S.loginBusy ? 'Signing in…' : 'Sign in',
+      onLoginEmail: (e) => this.setState({ loginEmail: e.target.value }),
+      onLoginPass: (e) => this.setState({ loginPass: e.target.value }),
+      onLoginKey: (e) => { if (e.key === 'Enter') this.doLogin(); },
+      doLogin: () => this.doLogin(),
+      canSignOut: !!(S.user && S.user !== 'local'),
+      signOut: () => { if (this.fb) this.fb.auth.signOut(); },
+      syncLabel: S.syncErr ? S.syncErr : S.user && S.user !== 'local' ? '● Cloud sync on — ' + S.user.email : S.user === 'local' ? 'Local mode — edits save to this browser' : 'Connecting…',
+      syncColor: S.syncErr ? '#E8837E' : S.user && S.user !== 'local' ? '#6CBF84' : '#7C838C',
+      toggleNav: () => this.setState({ navOpen: !S.navOpen }),
+      sideDisplay: S.isMobile ? 'none' : 'flex',
+      contentPad: S.isMobile ? '14px 14px' : '22px 26px',
+      contentMinW: S.isMobile ? '760px' : '0',
+    };
+    if (!d) return out;
+
+    // ---- Overview ----
+    if (S.view === 'overview') {
+      const ytd26 = d.yoy.reduce((s, m) => s + m.y26, 0);
+      const monthsWith26 = d.yoy.filter(m => m.y26 > 0).length;
+      const same25 = d.yoy.slice(0, monthsWith26).reduce((s, m) => s + m.y25, 0);
+      const goalYtd = d.yoy.slice(0, monthsWith26).reduce((s, m) => s + m.goal, 0);
+      const pipe = d.agents.reduce((s, a) => s + (a.pipe || 0), 0);
+      const yoyPct = Math.round((ytd26 - same25) / same25 * 100);
+      const activeAgents = d.agents.filter(a => a.cat !== 'Exit');
+      const avgH = Math.round(activeAgents.reduce((s, a) => s + this.health(a), 0) / activeAgents.length);
+      const hb = this.healthBand(avgH);
+      out.kpis = [
+        { label: 'YTD 2026 Sales', value: this.fmtK(ytd26), valueColor: '#1D2126', delta: (yoyPct >= 0 ? '+' : '') + yoyPct + '% vs 2025 same period', deltaColor: yoyPct >= 0 ? '#2E8B57' : '#C0433F' },
+        { label: '% to YTD Goal', value: Math.round(ytd26 / goalYtd * 100) + '%', valueColor: ytd26 >= goalYtd ? '#2E8B57' : '#C0433F', delta: this.fmtK(goalYtd) + ' goal through Jul', deltaColor: '#8A8F95' },
+        { label: 'Quote Pipeline', value: this.fmtK(pipe), valueColor: '#1D2126', delta: 'parsed open quotes', deltaColor: '#8A8F95' },
+        { label: 'Network Health', value: avgH, valueColor: hb[1], delta: 'avg score · ' + activeAgents.length + ' active agencies', deltaColor: '#8A8F95' },
+        { label: 'Open Opportunities', value: String(d.opps.filter(o => o.stage !== 'Won' && o.stage !== 'Lost').length), valueColor: '#1D2126', delta: d.opps.filter(o => o.stage === 'Won').length + ' won YTD', deltaColor: '#2E8B57' },
+        { label: 'Active Specs', value: String(d.specs.filter(s => s.stage !== 'Lost' && s.stage !== 'Awarded').length), valueColor: '#1D2126', delta: d.specs.filter(s => s.stage === 'Awarded').length + ' awarded YTD', deltaColor: '#2E8B57' },
+      ];
+      const maxV = Math.max(...d.yoy.map(m => Math.max(m.y25, m.y26, m.goal)));
+      out.chart = d.yoy.map(m => ({
+        m: m.m, h25: Math.round(m.y25 / maxV * 100), h26: Math.round(m.y26 / maxV * 100),
+        goalPct: Math.round(m.goal / maxV * 100),
+        tip: m.m + ': 2025 ' + this.fmtK(m.y25) + ' · 2026 ' + this.fmtK(m.y26) + ' · goal ' + this.fmtK(m.goal),
+      }));
+      const tierOf = a => (a.tier || '').indexOf('T1') === 0 ? 'T1' : (a.tier || '').indexOf('T2') === 0 ? 'T2' : (a.tier || '').indexOf('T3') === 0 ? 'T3' : 'Other';
+      const tierAgg = {};
+      d.agents.forEach(a => { const t = tierOf(a); tierAgg[t] = tierAgg[t] || { rev: 0, n: 0 }; tierAgg[t].rev += a.ytd; tierAgg[t].n++; });
+      const totRev = d.agents.reduce((s, a) => s + a.ytd, 0);
+      const tColors = { T1: '#1F3864', T2: '#5D9732', T3: '#C49F06', Other: '#B9B098' };
+      const tLabels = { T1: 'Tier 1 (incl. 1R)', T2: 'Tier 2', T3: 'Tier 3', Other: 'Exit / Other' };
+      out.tiers = ['T1', 'T2', 'T3', 'Other'].filter(t => tierAgg[t]).map(t => ({
+        label: tLabels[t], reps: tierAgg[t].n, rev: this.fmtK(tierAgg[t].rev),
+        share: Math.round(tierAgg[t].rev / totRev * 100) + '%', pct: Math.max(2, Math.round(tierAgg[t].rev / totRev * 100)), color: tColors[t],
+      }));
+      const catAgg = {};
+      d.agents.forEach(a => { catAgg[a.cat] = (catAgg[a.cat] || 0) + 1; });
+      out.catChips = Object.keys(catAgg).map(c => ({ label: c, n: catAgg[c], bg: (CAT[c] || CAT.Exit)[0], fg: (CAT[c] || CAT.Exit)[1] }));
+
+      // Rolling variance matrix
+      const mkCell = (t, bg, fg, fw) => ({ t, bg: bg || 'transparent', fg: fg || '#4A4F55', fw: fw || '600' });
+      const hdr = { label: '', cells: d.yoy.map(m => mkCell(m.m, '#FAF9F6', '#8A8F95', '700')).concat([mkCell('TOTAL', '#EFEDE7', '#4A4F55', '800')]) };
+      const t25 = d.yoy.reduce((s, m) => s + m.y25, 0), tg = d.yoy.reduce((s, m) => s + m.goal, 0);
+      const r25 = { label: '2025 Actual', cells: d.yoy.map(m => mkCell(this.fmtK(m.y25))).concat([mkCell(this.fmtK(t25), '#FAF9F6', '#1D2126', '800')]) };
+      const r26 = { label: '2026 Actual', cells: d.yoy.map(m => mkCell(m.y26 > 0 ? this.fmtK(m.y26) : '—', 'transparent', '#1D2126', '700')).concat([mkCell(this.fmtK(ytd26), '#FAF9F6', '#1D2126', '800')]) };
+      const rg = { label: '2026 Goal', cells: d.yoy.map(m => mkCell(this.fmtK(m.goal), 'transparent', '#8A8F95')).concat([mkCell(this.fmtK(tg), '#FAF9F6', '#8A8F95', '800')]) };
+      const vCell = (v, has) => {
+        if (!has) return mkCell('—', 'transparent', '#B9B4A9');
+        const pos = v >= 0;
+        return mkCell((pos ? '+' : '') + Math.round(v * 100) + '%', pos ? '#E4F2E8' : '#FBEAE9', pos ? '#2E7D46' : '#B23E3A', '800');
+      };
+      const rv = { label: 'Δ vs 2025', cells: d.yoy.map(m => vCell(m.y25 ? (m.y26 - m.y25) / m.y25 : 0, m.y26 > 0)).concat([vCell(same25 ? (ytd26 - same25) / same25 : 0, true)]) };
+      const goalYtd2 = d.yoy.slice(0, monthsWith26).reduce((s, m) => s + m.goal, 0);
+      const rvg = { label: 'Δ vs Goal', cells: d.yoy.map(m => vCell(m.goal ? (m.y26 - m.goal) / m.goal : 0, m.y26 > 0)).concat([vCell(goalYtd2 ? (ytd26 - goalYtd2) / goalYtd2 : 0, true)]) };
+      out.varRows = [hdr, r25, r26, rg, rv, rvg];
+
+      out.risks = d.agents.map((a, i) => ({ a, i, h: this.health(a) }))
+        .filter(x => x.a.cat !== 'Exit')
+        .sort((p, q2) => p.h - q2.h).slice(0, 7).map(x => {
+          const b = this.healthBand(x.h);
+          return {
+            name: x.a.n, tier: x.a.tier, why: x.a.blocker || x.a.risk || x.a.pri, dot: DOT[x.a.status] || DOT.Yellow,
+            h: x.h, hBg: b[0], hFg: b[1],
+            open: () => this.setState({ view: 'agents', sel: x.i }),
+          };
+        });
+      // Bookings widgets (from ERP uploads)
+      const snaps = this.snapshots();
+      out.bkNoData = snaps.length === 0;
+      out.bkHas = snaps.length > 0;
+      out.goImports = () => this.setState({ view: 'imports' });
+      if (snaps.length) {
+        const cur = snaps[snaps.length - 1], prev = snaps.length > 1 ? snaps[snaps.length - 2] : null;
+        out.bkPeriod = cur.period + (prev ? ' vs ' + prev.period : '');
+        const sum = (u, k) => u ? (u.rows || []).reduce((s, r) => s + (r[k] || 0), 0) : null;
+        const gTxt = (c, p) => {
+          if (p == null) return ['first upload — no prior period', '#8A8F95'];
+          const g = this.growthPct(c, p);
+          if (g == null) return ['new vs ' + this.fmtK(p), '#8A8F95'];
+          return [(g >= 0 ? '+' : '') + Math.round(g * 100) + '% vs prior upload', g >= 0 ? '#2E8B57' : '#C0433F'];
+        };
+        const mk = (label, k, fmt) => {
+          const c = sum(cur, k), p = prev ? sum(prev, k) : null;
+          const [delta, deltaColor] = gTxt(c, p);
+          return { label, value: fmt ? this.fmtK(c) : String(c), delta, deltaColor };
+        };
+        out.bkKpis = [mk('Total Net Bookings', 'net', true), mk('Orders Added', 'added'), mk('Orders Changed', 'changed'), mk('Orders Deleted', 'deleted')];
+        const ranked = cur.rows.slice().sort((a, b) => b.net - a.net);
+        const rowFor = (r, rank) => {
+          const p = prev ? (prev.rows || []).find(x => x.agency === r.agency) : null;
+          const g = p ? this.growthPct(r.net, p.net) : null;
+          const idx = d.agents.findIndex(a => a.n === r.agency);
+          return {
+            rank, name: r.agency, net: this.fmtK(r.net),
+            g: g == null ? '—' : (g >= 0 ? '+' : '') + Math.round(g * 100) + '%',
+            gColor: g == null ? '#8A8F95' : g >= 0 ? '#2E8B57' : '#C0433F',
+            open: () => { if (idx >= 0) this.setState({ view: 'agents', sel: idx }); },
+          };
+        };
+        out.bkTop = ranked.slice(0, 10).map((r, i) => rowFor(r, i + 1));
+        out.bkBottom = ranked.slice(-10).reverse().map(r => rowFor(r, ranked.indexOf(r) + 1));
+      }
+      // Health lists
+      const hAll = activeAgents.map(a => ({ a, i: d.agents.indexOf(a), h: this.health(a) }));
+      const g0 = (d.settings || {}).healthGreen ?? 70, y0 = (d.settings || {}).healthYellow ?? 45;
+      const mkList2 = (label, color, items) => ({
+        label, color, n: items.length, empty: items.length === 0,
+        items: items.slice(0, 6).map(x => ({ name: x.a.n, h: x.h, open: () => this.setState({ view: 'agents', sel: x.i }) })),
+      });
+      out.hLists = [
+        mkList2('Top Performing', '#2E7D46', hAll.filter(x => x.h >= g0).sort((p, q2) => q2.h - p.h)),
+        mkList2('Watch List', '#B8860B', hAll.filter(x => x.h >= y0 && x.h < g0).sort((p, q2) => p.h - q2.h)),
+        mkList2('Intervention List', '#C0433F', hAll.filter(x => x.h < y0).sort((p, q2) => p.h - q2.h)),
+      ];
+
+      out.topOpps = d.opps.filter(o => o.vNum > 0 && o.stage !== 'Won' && o.stage !== 'Lost').sort((a, b) => b.vNum - a.vNum).slice(0, 7).map(o => ({
+        name: o.name, agent: o.agent, value: o.value, stage: o.stage,
+        stageBg: (STAGE[o.stage] || STAGE.Targeted)[0], stageFg: (STAGE[o.stage] || STAGE.Targeted)[1],
+      }));
+    }
+
+    // ---- Agencies list ----
+    out.isAgents = S.view === 'agents' && S.sel < 0;
+    out.isAgentDetail = false;
+    if (S.view === 'agents' && S.sel < 0) {
+      const cats = ['All', 'Protect', 'Build', 'Push', 'Fix', 'Exit'];
+      out.filters = cats.map(c => {
+        const n = c === 'All' ? d.agents.length : d.agents.filter(a => a.cat === c).length;
+        const on = S.catFilter === c;
+        return { label: c, n, go: () => this.setState({ catFilter: c }), bg: on ? '#1D2126' : '#FFFFFF', fg: on ? '#F4F2ED' : '#4A4F55', border: on ? '#1D2126' : '#DAD6CD' };
+      });
+      const ql = S.q.toLowerCase();
+      out.agentRows = d.agents.map((a, i) => ({ a, i }))
+        .filter(x => (S.catFilter === 'All' || x.a.cat === S.catFilter) && (!ql || (x.a.n + ' ' + x.a.terr + ' ' + (x.a.vert || '')).toLowerCase().includes(ql)))
+        .map(x => {
+          const a = x.a, h = this.health(a), hb = this.healthBand(h), cl = this.certLevel(a.n), cc = this.certColors(cl.level);
+          return {
+            n: a.n, terr: a.terr, cat: a.cat, tier: a.tier, pri: a.pri,
+            catBg: (CAT[a.cat] || CAT.Exit)[0], catFg: (CAT[a.cat] || CAT.Exit)[1],
+            dot: DOT[a.status] || DOT.Yellow,
+            ytd: this.fmtK(a.ytd), yoy: this.yoyOf(a), yoyColor: this.yoyColor(a),
+            h, hBg: hb[0], hFg: hb[1],
+            cert: cl.level === 'Not Certified' ? cl.done + '/' + cl.total : cl.level, certBg: cc[0], certFg: cc[1],
+            open: () => this.setState({ sel: x.i }),
+            cycle: (e) => { e.stopPropagation(); const order = ['Green', 'Yellow', 'Red']; this.mut(dd => { const c = dd.agents[x.i].status; dd.agents[x.i].status = order[(order.indexOf(c) + 1) % 3]; }); },
+          };
+        });
+      out.addLabel = 'Add agency';
+      out.onAdd = () => {
+        const newIdx = this.state.data.agents.length;
+        this.mut(dd => dd.agents.push({ n: 'New Agency', terr: '', cat: 'Build', tier: 'T2', wbTier: '', cov: 'Guide/Joint', ytd: 0, prev: 0, pipe: 0, vert: '', pri: '', status: 'Yellow', blocker: '', o1: '', o1s: '', o1v: '', visit: 'TBD', cq: '—', geoA: '', geoD: '', overlay: false, split: false, risk: '' }));
+        this.setState({ sel: newIdx, catFilter: 'All', q: '' });
+      };
+    }
+
+    // ---- Agency detail page ----
+    if (S.view === 'agents' && S.sel >= 0 && d.agents[S.sel]) {
+      const a = d.agents[S.sel];
+      out.isAgentDetail = true; out.isDetail = true;
+      out.viewTitle = a.n; out.viewSub = a.terr + ' · ' + a.tier + ' · ' + a.cat + ' · ' + (a.cov || '—');
+      const h = this.health(a), hb = this.healthBand(h), parts = this.healthParts(a);
+      const w = (d.settings || {}).weights || {};
+      const cl = this.certLevel(a.n), cc = this.certColors(cl.level);
+      out.detKpis = [
+        { label: 'YTD 2026', value: this.fmtK(a.ytd), valueColor: '#1D2126', delta: 'FY2025: ' + this.fmtK(a.prev) },
+        { label: 'YoY vs 2025', value: this.yoyOf(a), valueColor: this.yoyColor(a), delta: 'same-period pacing' },
+        { label: 'Quote Pipeline', value: this.fmtK(a.pipe), valueColor: '#1D2126', delta: 'parsed open quotes' },
+        { label: 'Health Score', value: h, valueColor: hb[1], delta: 'weighted · see breakdown' },
+      ];
+      out.detH = h; out.detHBg = hb[0]; out.detHFg = hb[1];
+      const pc = v => v >= 70 ? '#3BA55D' : v >= 45 ? '#E8B931' : '#D9534F';
+      out.detParts = [
+        { label: 'Revenue pacing', w: w.rev + '%', v: parts.rev, color: pc(parts.rev) },
+        { label: 'Opportunities', w: w.opp + '%', v: parts.opp, color: pc(parts.opp) },
+        { label: 'Training', w: w.training + '%', v: parts.tr, color: pc(parts.tr) },
+        { label: 'CEU / AIA', w: w.ceu + '%', v: parts.ceu, color: pc(parts.ceu) },
+        { label: 'Strategic accounts', w: w.strategic + '%', v: parts.strat, color: pc(parts.strat) },
+        { label: 'Reporting compliance', w: w.reporting + '%', v: parts.rep, color: pc(parts.rep) },
+      ];
+      out.detBkModTxt = (parts.bkMod >= 0 ? '+' : '') + parts.bkMod + ' pts';
+      out.detBkModColor = parts.bkMod > 0 ? '#2E7D46' : parts.bkMod < 0 ? '#B23E3A' : '#8A8F95';
+      out.det = { tier: a.tier, cov: a.cov || '', terr: a.terr, vert: a.vert || '', pri: a.pri || '', blocker: a.blocker || '', notes: a.notes || '', visit: a.visit || '—', cq: a.cq || '—', risk: a.risk || '—' };
+      out.detStatusBg = a.status === 'Red' ? '#FBEAE9' : a.status === 'Green' ? '#E4F2E8' : '#FBF0DA';
+      out.detStatusFg = a.status === 'Red' ? '#B23E3A' : a.status === 'Green' ? '#2E7D46' : '#9A6A08';
+      out.detStatusRef = (el) => { if (el) el.value = a.status; };
+      out.detCatRef = (el) => { if (el) el.value = a.cat; };
+      out.detF = (e) => { const { name, value } = e.target; const idx = S.sel; this.mut(dd => { dd.agents[idx][name] = value; }); };
+      out.detDelete = () => { if (confirm('Delete ' + a.n + '?')) { this.mut(dd => dd.agents.splice(S.sel, 1)); this.setState({ sel: -1 }); } };
+      const aOpps = d.opps.map((o, i) => ({ o, i })).filter(x => x.o.agent === a.n);
+      out.detOpps = aOpps.map(x => ({ name: x.o.name, stage: x.o.stage, value: x.o.value, bg: (STAGE[x.o.stage] || STAGE.Targeted)[0], fg: (STAGE[x.o.stage] || STAGE.Targeted)[1] }));
+      out.detNoOpps = aOpps.length === 0;
+      const SPST = { 'Target Identified': ['#ECEBE7', '#5A5F66'], 'Specifier Engaged': ['#E3EEF9', '#2361A5'], 'Basis of Design': ['#DDEBF7', '#1D5288'], 'Named Specification': ['#F3E8FA', '#7B3FA0'], 'Bid Stage': ['#FBF0DA', '#9A6A08'], Awarded: ['#E4F2E8', '#2E7D46'], Lost: ['#FBEAE9', '#B23E3A'] };
+      const aSpecs = d.specs.filter(s => s.agent === a.n);
+      out.detSpecs = aSpecs.map(s => ({ project: s.project, stage: s.stage, value: s.value, bg: (SPST[s.stage] || SPST['Target Identified'])[0], fg: (SPST[s.stage] || SPST['Target Identified'])[1] }));
+      out.detNoSpecs = aSpecs.length === 0;
+      out.detCert = cl.level; out.detCertBg = cc[0]; out.detCertFg = cc[1];
+      out.detCertSub = 'Level 1: ' + cl.done + '/' + cl.total + ' required courses complete (quiz ≥ ' + ((d.settings || {}).quizPass ?? 80) + ' to count)';
+      const courseList = ((d.settings || {}).courseList) || [];
+      out.detCourses = courseList.map(cs => {
+        const r = (d.trainingRecs || []).find(x => x.agent === a.n && x.course === cs);
+        const done = r && r.status === 'Completed';
+        return {
+          course: cs,
+          dot: done ? '#3BA55D' : r && r.status === 'In Progress' ? '#E8B931' : '#D5D1C8',
+          quiz: done && r.quiz != null ? 'Quiz ' + r.quiz : (r ? r.status : 'Not assigned'),
+          qColor: done && r.quiz != null ? (r.quiz >= (((d.settings || {}).quizPass) ?? 80) ? '#2E7D46' : '#B23E3A') : '#8A8F95',
+        };
+      });
+      const cp = (d.ceuProfiles || []).find(x => x.agent === a.n);
+      out.detCeuStatus = cp ? cp.status : 'Not Started';
+      out.detCeuColor = cp && cp.status === 'Presenter Certified' ? '#2E7D46' : cp && cp.status !== 'Not Started' ? '#9A6A08' : '#8A8F95';
+      out.detCeuChamp = cp && cp.champName ? cp.champName : '— not named';
+      out.detCeuDelivered = cp ? cp.delivered : 0;
+      out.detCeuAtt = cp ? cp.attendees : 0;
+      out.detCeuNext = cp && cp.nextAction ? cp.nextAction : '—';
+      // Bookings intelligence
+      const snapsD = this.snapshots();
+      const bkD = this.bookingsFor(a.n);
+      out.detBkNo = !bkD.cur;
+      out.detBkHas = !!bkD.cur;
+      out.detBkMeta = bkD.curUpload ? 'Latest upload: ' + bkD.curUpload.period + ' · ' + this.fmtDate(bkD.curUpload.date) : 'No uploads yet';
+      if (bkD.cur) {
+        const g = bkD.prev ? this.growthPct(bkD.cur.net, bkD.prev.net) : null;
+        const ranked = bkD.curUpload.rows.slice().sort((x, y) => y.net - x.net);
+        const natRank = ranked.findIndex(r => r.agency === a.n) + 1;
+        const tierOf2 = t => (t || '').indexOf('T1') === 0 ? 'T1' : (t || '').indexOf('T2') === 0 ? 'T2' : (t || '').indexOf('T3') === 0 ? 'T3' : 'Other';
+        const myTier = tierOf2(a.tier);
+        const tierRanked = ranked.filter(r => { const ag = d.agents.find(x => x.n === r.agency); return ag && tierOf2(ag.tier) === myTier; });
+        const tierRank = tierRanked.findIndex(r => r.agency === a.n) + 1;
+        out.detBkStats = [
+          { label: 'Net Bookings', v: this.fmtK(bkD.cur.net), color: bkD.cur.net < 0 ? '#B23E3A' : '#1D2126' },
+          { label: 'Prior Upload', v: bkD.prev ? this.fmtK(bkD.prev.net) : '—', color: '#6B7076' },
+          { label: 'Growth', v: g == null ? '—' : (g >= 0 ? '+' : '') + Math.round(g * 100) + '%', color: g == null ? '#8A8F95' : g >= 0 ? '#2E8B57' : '#C0433F' },
+          { label: 'Orders Added', v: String(bkD.cur.added || 0), color: '#1D2126' },
+          { label: 'Orders Changed', v: String(bkD.cur.changed || 0), color: '#1D2126' },
+          { label: 'Orders Deleted', v: String(bkD.cur.deleted || 0), color: bkD.cur.deleted > 0 ? '#B23E3A' : '#1D2126' },
+          { label: 'National Rank', v: natRank ? '#' + natRank + ' of ' + ranked.length : '—', color: '#1F3864' },
+          { label: myTier + ' Rank', v: tierRank ? '#' + tierRank + ' of ' + tierRanked.length : '—', color: '#1F3864' },
+        ];
+        const hist = snapsD.map(u => ({ u, r: (u.rows || []).find(r => r.agency === a.n) })).filter(x => x.r);
+        const maxN = Math.max(1, ...hist.map(x => Math.abs(x.r.net)));
+        out.detTrend = hist.map(x => ({
+          label: x.u.period, v: this.fmtK(x.r.net),
+          h: Math.round(Math.abs(x.r.net) / maxN * 100),
+          tip: x.u.period + ': ' + this.fmtK(x.r.net) + ' · +' + (x.r.added || 0) + ' / ~' + (x.r.changed || 0) + ' / −' + (x.r.deleted || 0),
+        }));
+      }
+      const days = a.last ? this.today() - a.last : null;
+      out.detLast = this.fmtDate(a.last);
+      out.detDays = days == null ? 'never logged' : days + ' days ago';
+      out.detDaysColor = days == null || days > 30 ? '#C0433F' : days > 14 ? '#B8860B' : '#2E8B57';
+      out.detNext = this.fmtDate(a.next);
+      const detTrips = this.tripsFor(a.n);
+      out.detTrip = detTrips.length ? '✈ ' + detTrips.map(z => z.t.month + ' ' + z.t.week + ' — ' + z.t.who).join(' · ') : 'none scheduled — add one in Calendar';
+      out.detTripColor = detTrips.length ? '#1F3864' : '#8A8F95';
+    }
+
+    // ---- Opportunities ----
+    out.isOpps = S.view === 'opps';
+    const st0 = d.settings || {};
+    out.agentOptions = ['—', 'Direct/House'].concat(d.agents.map(a => a.n));
+    out.oppStageOptions = st0.oppStages || ['Targeted', 'Spec In', 'Quoted', 'Close Watch', 'Waiting', 'Won', 'Lost'];
+    if (S.view === 'opps') {
+      out.stageCards = out.oppStageOptions.filter(s => s !== 'Lost').map(s => ({ label: s, n: d.opps.filter(o => o.stage === s).length, color: (STAGE[s] || STAGE.Targeted)[1] }));
+      out.oppRows = d.opps.map((o, i) => ({
+        name: o.name, agent: o.agent, stage: o.stage, value: o.value, next: o.next, owner: o.owner,
+        stageBg: (STAGE[o.stage] || STAGE.Targeted)[0], stageFg: (STAGE[o.stage] || STAGE.Targeted)[1],
+        refStage: (el) => { if (el) el.value = o.stage; },
+        refAgent: (el) => { if (el) el.value = o.agent; },
+        set: (e) => { const { name, value } = e.target; this.mut(dd => { dd.opps[i][name] = value; if (name === 'value') { const m = value.replace(/[^0-9.]/g, ''); dd.opps[i].vNum = m ? parseFloat(m) * (/k/i.test(value) ? 1000 : /m/i.test(value) ? 1000000 : 1) : 0; } }); },
+        del: () => { if (confirm('Delete this opportunity?')) this.mut(dd => dd.opps.splice(i, 1)); },
+      }));
+      out.addLabel = 'Add opportunity';
+      out.onAdd = () => this.mut(dd => dd.opps.unshift({ agent: '—', name: 'New opportunity', stage: 'Targeted', value: 'TBD', vNum: 0, next: '', owner: 'Director', note: '' }));
+    }
+
+    // ---- Spec Pipeline ----
+    out.isSpecs = S.view === 'specs';
+    const SPST2 = { 'Target Identified': ['#ECEBE7', '#5A5F66'], 'Specifier Engaged': ['#E3EEF9', '#2361A5'], 'Basis of Design': ['#DDEBF7', '#1D5288'], 'Named Specification': ['#F3E8FA', '#7B3FA0'], 'Bid Stage': ['#FBF0DA', '#9A6A08'], Awarded: ['#E4F2E8', '#2E7D46'], Lost: ['#FBEAE9', '#B23E3A'] };
+    out.specStageOptions = st0.specStages || Object.keys(SPST2);
+    if (S.view === 'specs') {
+      out.specStageCards = out.specStageOptions.filter(s => s !== 'Lost').map(s => {
+        const rows = d.specs.filter(x => x.stage === s);
+        return { label: s, n: rows.length, v: this.fmtK(rows.reduce((t, r) => t + (r.vNum || 0), 0)), color: (SPST2[s] || SPST2['Target Identified'])[1] };
+      });
+      out.specRows = d.specs.map((sp, i) => ({
+        project: sp.project, agent: sp.agent, specifier: sp.specifier, stage: sp.stage, value: sp.value, next: sp.next,
+        bg: (SPST2[sp.stage] || SPST2['Target Identified'])[0], fg: (SPST2[sp.stage] || SPST2['Target Identified'])[1],
+        refStage: (el) => { if (el) el.value = sp.stage; },
+        refAgent: (el) => { if (el) el.value = sp.agent; },
+        set: (e) => { const { name, value } = e.target; this.mut(dd => { dd.specs[i][name] = value; if (name === 'value') { const m = value.replace(/[^0-9.]/g, ''); dd.specs[i].vNum = m ? parseFloat(m) * (/k/i.test(value) ? 1000 : /m/i.test(value) ? 1000000 : 1) : 0; } }); },
+        del: () => { if (confirm('Delete this spec record?')) this.mut(dd => dd.specs.splice(i, 1)); },
+      }));
+      out.addLabel = 'Add spec';
+      out.onAdd = () => this.mut(dd => dd.specs.unshift({ agent: '—', project: 'New spec project', specifier: '', stage: 'Target Identified', value: 'TBD', vNum: 0, next: '' }));
+    }
+
+    // ---- Contact Cadence ----
+    out.isCadence = S.view === 'cadence';
+    if (S.view === 'cadence') {
+      const now = this.today();
+      const rows = d.agents.map((a, i) => ({ a, i, days: a.last ? now - a.last : null })).filter(x => x.a.cat !== 'Exit');
+      const band = dys => dys == null || dys > 30 ? 'red' : dys > 14 ? 'yellow' : 'green';
+      const nRed = rows.filter(x => band(x.days) === 'red').length, nYel = rows.filter(x => band(x.days) === 'yellow').length, nGrn = rows.filter(x => band(x.days) === 'green').length;
+      out.cadStats = [
+        { label: 'Needs outreach now (>30d)', n: nRed, color: '#C0433F' },
+        { label: 'Getting stale (15–30d)', n: nYel, color: '#B8860B' },
+        { label: 'Current (≤14d)', n: nGrn, color: '#2E8B57' },
+        { label: 'Active agencies', n: rows.length, color: '#1D2126' },
+      ];
+      out.cadRows = rows.sort((p, q2) => (q2.days == null ? 9999 : q2.days) - (p.days == null ? 9999 : p.days)).map(x => {
+        const b = band(x.days);
+        const colors = b === 'red' ? ['#FBEAE9', '#B23E3A'] : b === 'yellow' ? ['#FBF0DA', '#9A6A08'] : ['#E4F2E8', '#2E7D46'];
+        const toISO = s => s ? new Date(Date.UTC(1899, 11, 30) + s * 86400000).toISOString().slice(0, 10) : '';
+        const fromISO = v => v ? Math.round((Date.parse(v + 'T00:00:00Z') - Date.UTC(1899, 11, 30)) / 86400000) : null;
+        const myTrips = this.tripsFor(x.a.n);
+        return {
+          trip: myTrips.length ? '✈ Trip: ' + myTrips.map(z => z.t.month + ' ' + z.t.week).join(', ') : '',
+          goTrip: () => { if (myTrips.length) this.setState({ view: 'calendar' }); },
+          n: x.a.n, terr: x.a.terr, tier: x.a.tier,
+          lastISO: toISO(x.a.last), nextISO: toISO(x.a.next), pri: x.a.pri || '—',
+          mode: x.a.touchMode === 'manual' ? 'MANUALLY UPDATED' : 'AUTO UPDATED',
+          modeColor: x.a.touchMode === 'manual' ? '#7B3FA0' : '#8A8F95',
+          days: x.days == null ? 'never' : x.days + 'd', dBg: colors[0], dFg: colors[1],
+          open: () => this.setState({ view: 'agents', sel: x.i }),
+          touch: () => this.mut(dd => { dd.agents[x.i].last = now; dd.agents[x.i].touchMode = 'auto'; }),
+          setLast: (e) => this.mut(dd => { dd.agents[x.i].last = fromISO(e.target.value); dd.agents[x.i].touchMode = 'manual'; }),
+          setNext: (e) => this.mut(dd => { dd.agents[x.i].next = fromISO(e.target.value); dd.agents[x.i].touchMode = 'manual'; }),
+        };
+      });
+    }
+
+    // ---- Training ----
+    out.isTraining = S.view === 'training';
+    out.agentNames = d.agents.map(a => a.n);
+    out.courseOptions = st0.courseList || [];
+    out.trStatusOptions = st0.trainingStatuses || ['Not Started', 'In Progress', 'Completed', 'Overdue', 'Expired', 'Waived'];
+    out.spTrackOptions = st0.specialistTracks || [];
+    out.spStatusOptions = (st0.specialistStatuses || ['Not Assigned', 'Assigned', 'In Progress', 'Completed', 'Certified', 'Expired']).filter(s => s !== 'Not Assigned');
+    if (S.view === 'training') {
+      const recs = d.trainingRecs || [];
+      const pass = st0.quizPass ?? 80;
+      const TRST = { 'Not Started': ['#ECEBE7', '#6B7076'], 'In Progress': ['#FBF0DA', '#9A6A08'], Completed: ['#E4F2E8', '#2E7D46'], Overdue: ['#FBEAE9', '#B23E3A'], Expired: ['#FBEAE9', '#B23E3A'], Waived: ['#EDEFF2', '#5A6470'] };
+      const active = d.agents.filter(a => a.cat !== 'Exit');
+      const levels = active.map(a => this.certLevel(a.n).level);
+      const quizzes = recs.filter(r => r.quiz != null);
+      const avgQuiz = quizzes.length ? Math.round(quizzes.reduce((s, r) => s + r.quiz, 0) / quizzes.length) : 0;
+      const done = recs.filter(r => r.status === 'Completed').length;
+      const compPct = recs.length ? Math.round(done / recs.length * 100) : 0;
+      out.trStats = [
+        { label: 'Level 1 completion', n: compPct + '%', sub: done + ' of ' + recs.length + ' course records', color: compPct >= 70 ? '#2E8B57' : compPct >= 45 ? '#B8860B' : '#C0433F' },
+        { label: 'Gold', n: levels.filter(l => l === 'Gold').length, sub: 'L1 + specialist + presenter', color: '#8A6D08' },
+        { label: 'Silver', n: levels.filter(l => l === 'Silver').length, sub: 'L1 + specialist or presenter', color: '#5A6470' },
+        { label: 'Bronze', n: levels.filter(l => l === 'Bronze').length, sub: 'all Level 1 passed', color: '#8A5A2B' },
+        { label: 'Avg quiz score', n: avgQuiz, sub: 'pass mark ' + pass + ' — set in Settings', color: avgQuiz >= pass ? '#2E8B57' : '#C0433F' },
+      ];
+      out.certRows = d.agents.map((a, i) => ({ a, i })).filter(x => x.a.cat !== 'Exit').map(x => {
+        const cl = this.certLevel(x.a.n), cc = this.certColors(cl.level);
+        const aq = recs.filter(r => r.agent === x.a.n && r.quiz != null);
+        const avg = aq.length ? Math.round(aq.reduce((s, r) => s + r.quiz, 0) / aq.length) : null;
+        const sp = (d.specialist || []).find(s => s.agent === x.a.n);
+        const cp = (d.ceuProfiles || []).find(p => p.agent === x.a.n);
+        const pct = cl.total ? Math.round(cl.done / cl.total * 100) : 0;
+        return {
+          n: x.a.n, frac: cl.done + '/' + cl.total, pct,
+          barColor: pct === 100 ? '#3BA55D' : pct >= 50 ? '#E8B931' : '#D9534F',
+          quiz: avg == null ? '—' : avg, quizColor: avg == null ? '#B9B4A9' : avg >= pass ? '#2E7D46' : '#B23E3A',
+          spec: sp ? sp.track.replace(' Specialist', '') + ' · ' + sp.status : '—',
+          spColor: sp && sp.certified ? '#2E7D46' : sp ? '#9A6A08' : '#B9B4A9',
+          pres: cp && cp.approved ? 'Certified' : cp && cp.presTraining ? 'In training' : '—',
+          presColor: cp && cp.approved ? '#2E7D46' : cp && cp.presTraining ? '#9A6A08' : '#B9B4A9',
+          cert: cl.level, certBg: cc[0], certFg: cc[1],
+          open: () => this.setState({ view: 'agents', sel: x.i }),
+        };
+      }).sort((p, q2) => q2.pct - p.pct);
+      out.trNoRecs = recs.length === 0;
+      out.trFilterRef = (el) => { if (el) el.value = S.trFilter; };
+      out.onTrFilter = (e) => this.setState({ trFilter: e.target.value });
+      out.trRecRows = recs.map((r, i) => ({ r, i })).filter(x => S.trFilter === 'All' || x.r.agent === S.trFilter).map(x => {
+        const r = x.r;
+        return {
+          quiz: r.quiz == null ? '' : String(r.quiz), quizColor: r.quiz == null ? '#8A8F95' : r.quiz >= pass ? '#2E7D46' : '#B23E3A',
+          completed: this.fmtDate(r.completed),
+          stBg: (TRST[r.status] || TRST['Not Started'])[0], stFg: (TRST[r.status] || TRST['Not Started'])[1],
+          refAgent: (el) => { if (el) el.value = r.agent; },
+          refCourse: (el) => { if (el) el.value = r.course; },
+          refStatus: (el) => { if (el) el.value = r.status; },
+          set: (e) => {
+            const { name, value } = e.target;
+            this.mut(dd => {
+              const rec = dd.trainingRecs[x.i];
+              if (name === 'quiz') rec.quiz = value === '' ? null : Math.max(0, Math.min(100, Number(value) || 0));
+              else rec[name] = value;
+              if (name === 'status' && value === 'Completed' && !rec.completed) { rec.completed = this.today(); rec.expires = this.today() + 365; }
+              if (name === 'agent') rec.assignedTo = value;
+            });
+          },
+          del: () => { if (confirm('Delete this course record?')) this.mut(dd => dd.trainingRecs.splice(x.i, 1)); },
+        };
+      });
+      out.addLabel = 'Add course record';
+      out.onAdd = () => this.mut(dd => dd.trainingRecs.unshift({ agent: S.trFilter === 'All' ? d.agents[0].n : S.trFilter, course: (st0.courseList || [''])[0], assignedTo: '', assigned: this.today(), completed: null, status: 'Not Started', quiz: null, expires: null, notes: '' }));
+      const SPS = { Assigned: ['#ECEBE7', '#6B7076'], 'In Progress': ['#FBF0DA', '#9A6A08'], Completed: ['#E3EEF9', '#2361A5'], Certified: ['#E4F2E8', '#2E7D46'], Expired: ['#FBEAE9', '#B23E3A'] };
+      out.spTrackRows = (d.specialist || []).map((sp, i) => ({
+        agent: sp.agent, meta: sp.certified ? 'certified ' + this.fmtDate(sp.completed) : 'assigned ' + this.fmtDate(sp.assigned),
+        stBg: (SPS[sp.status] || SPS.Assigned)[0], stFg: (SPS[sp.status] || SPS.Assigned)[1],
+        refStatus: (el) => { if (el) el.value = sp.status; },
+        refTrack: (el) => { if (el) el.value = sp.track; },
+        set: (e) => {
+          const { name, value } = e.target;
+          this.mut(dd => {
+            const rec = dd.specialist[i];
+            rec[name] = value;
+            if (name === 'status') { rec.certified = value === 'Certified'; if (value === 'Certified' && !rec.completed) { rec.completed = this.today(); rec.expires = this.today() + 730; } }
+          });
+        },
+        del: () => { if (confirm('Remove this specialist track assignment?')) this.mut(dd => dd.specialist.splice(i, 1)); },
+      }));
+      out.addSpecialist = () => this.mut(dd => dd.specialist.push({ agent: d.agents[0].n, track: (st0.specialistTracks || ['Federal Specialist'])[0], assigned: this.today(), status: 'Assigned', completed: null, certified: false, expires: null, notes: '' }));
+    }
+
+    // ---- AIA CEU ----
+    out.isCeu = S.view === 'ceu';
+    out.ceuStatusOptions = st0.aiaStatuses || ['Not Started', 'Invited', 'In Progress', 'Portal Active', 'Presenter Certified', 'Needs Follow-Up', 'Paused'];
+    if (S.view === 'ceu') {
+      const profs = d.ceuProfiles || [], evts = d.ceuEvents || [];
+      const certified = profs.filter(p => p.approved).length;
+      const inProg = profs.filter(p => !p.approved && (p.acct || p.registered || p.presTraining)).length;
+      const delivered = evts.filter(e => e.status !== 'Scheduled' && e.status !== 'Cancelled');
+      const att = delivered.reduce((s, e) => s + (e.attendees || 0), 0);
+      const fuOpen = evts.filter(e => e.fuReq && !e.fuDone && e.status !== 'Scheduled' && e.status !== 'Cancelled').length;
+      out.ceuStats = [
+        { label: 'Certified presenters', n: certified, sub: 'approved to deliver CEUs', color: '#2E8B57' },
+        { label: 'In certification', n: inProg, sub: 'somewhere in the pipeline', color: '#B8860B' },
+        { label: 'Events delivered', n: delivered.length, sub: evts.filter(e => e.status === 'Scheduled').length + ' scheduled', color: '#1F3864' },
+        { label: 'Total attendees', n: att, sub: 'specifiers reached YTD', color: '#1D2126' },
+        { label: 'Follow-ups open', n: fuOpen, sub: 'due within 5 business days', color: fuOpen > 0 ? '#C0433F' : '#2E8B57' },
+      ];
+      const CEUST = { 'Not Started': ['#ECEBE7', '#6B7076'], Invited: ['#E3EEF9', '#2361A5'], 'In Progress': ['#FBF0DA', '#9A6A08'], 'Portal Active': ['#DDEBF7', '#1D5288'], 'Presenter Certified': ['#E4F2E8', '#2E7D46'], 'Needs Follow-Up': ['#FBEAE9', '#B23E3A'], Paused: ['#EDEFF2', '#5A6470'] };
+      const stepDefs = [['acct', 'AIA account created'], ['registered', 'Provider registration'], ['access', 'Portal access'], ['presTraining', 'Presenter training'], ['presAssessment', 'Presenter assessment'], ['mock', 'Mock presentation'], ['approved', 'Approved / certified']];
+      const now = this.today();
+      out.ceuProfRows = profs.map((p, i) => ({
+        agent: p.agent, champ: p.champName || '', delivered: p.delivered || 0, att: p.attendees || 0, next: p.nextAction || '',
+        due: p.nextDue ? this.fmtDate(p.nextDue) : '—', dueColor: p.nextDue && p.nextDue < now ? '#C0433F' : '#6B7076',
+        stBg: (CEUST[p.status] || CEUST['Not Started'])[0], stFg: (CEUST[p.status] || CEUST['Not Started'])[1],
+        refStatus: (el) => { if (el) el.value = p.status; },
+        set: (e) => { const { name, value } = e.target; this.mut(dd => { dd.ceuProfiles[i][name] = value; }); },
+        steps: stepDefs.map(([key, label]) => ({
+          label, ch: p[key] ? '✓' : '',
+          bg: p[key] ? '#E4F2E8' : '#FAF9F6', fg: p[key] ? '#2E7D46' : '#B9B4A9', border: p[key] ? '#BFDCC8' : '#E7E4DD',
+          toggle: () => this.mut(dd => {
+            const pr = dd.ceuProfiles[i];
+            pr[key] = !pr[key];
+            if (key === 'approved') { pr.certDate = pr.approved ? this.today() : null; pr.certExpires = pr.approved ? this.today() + 730 : null; if (pr.approved) pr.status = 'Presenter Certified'; }
+          }),
+        })),
+      }));
+      out.ceuEventRows = evts.map((e, i) => ({
+        date: this.fmtDate(e.date), firm: e.firm, course: e.course, att: String(e.attendees || 0),
+        fu: e.fuReq ? (e.fuDone ? 'Done ✓' : 'Open') : 'n/a',
+        fuBg: !e.fuReq ? '#FAF9F6' : e.fuDone ? '#E4F2E8' : '#FBEAE9',
+        fuFg: !e.fuReq ? '#B9B4A9' : e.fuDone ? '#2E7D46' : '#B23E3A',
+        fuBorder: !e.fuReq ? '#E7E4DD' : e.fuDone ? '#BFDCC8' : '#EBC7C5',
+        stBg: e.status === 'Converted to Spec Activity' ? '#F3E8FA' : e.status === 'Completed' ? '#E4F2E8' : e.status === 'Needs Follow-Up' ? '#FBEAE9' : e.status === 'Cancelled' ? '#ECEBE7' : '#FBF0DA',
+        stFg: e.status === 'Converted to Spec Activity' ? '#7B3FA0' : e.status === 'Completed' ? '#2E7D46' : e.status === 'Needs Follow-Up' ? '#B23E3A' : e.status === 'Cancelled' ? '#6B7076' : '#9A6A08',
+        refAgent: (el) => { if (el) el.value = e.agent; },
+        refLoc: (el) => { if (el) el.value = e.loc; },
+        refStatus: (el) => { if (el) el.value = e.status; },
+        set: (ev) => { const { name, value } = ev.target; this.mut(dd => { dd.ceuEvents[i][name] = name === 'attendees' ? (Number(value) || 0) : value; }); },
+        toggleFu: () => this.mut(dd => { const x = dd.ceuEvents[i]; if (x.fuReq) x.fuDone = !x.fuDone; }),
+        del: () => { if (confirm('Delete this CEU event?')) this.mut(dd => dd.ceuEvents.splice(i, 1)); },
+      }));
+      out.trNoRecs = false; // (set in training view)
+      out.ceuNoProfs = profs.length === 0;
+      out.ceuNoEvents = evts.length === 0;
+      out.addCeuProfile = () => {
+        const existing = profs.map(p => p.agent);
+        const cand = d.agents.find(a => existing.indexOf(a.n) < 0 && a.cat !== 'Exit');
+        this.mut(dd => { dd.ceuProfiles = dd.ceuProfiles || []; dd.ceuProfiles.push({ agent: cand ? cand.n : d.agents[0].n, champName: '', champEmail: '', champPhone: '', backupName: '', backupEmail: '', status: 'Not Started', acct: false, registered: false, access: false, presTraining: false, presAssessment: false, mock: false, approved: false, certDate: null, certExpires: null, sched: 0, delivered: 0, attendees: 0, followUp: 0, notes: '', nextAction: '', nextDue: null }); });
+      };
+      out.addLabel = 'Log CEU event';
+      out.onAdd = () => this.mut(dd => dd.ceuEvents.unshift({ date: this.today(), agent: d.agents[0].n, presenter: '', firm: 'New firm', contact: '', course: '', attendees: 0, loc: 'In Person', fuReq: true, fuDone: false, opps: 0, spec: '', status: 'Scheduled', notes: '' }));
+    }
+
+    // ---- YoY / Calendar / Calls / LinkedIn ----
+    out.isYoy = S.view === 'yoy'; out.isCalendar = S.view === 'calendar'; out.isCalls = S.view === 'calls'; out.isLinkedin = S.view === 'linkedin';
+    if (S.view === 'yoy') {
+      const ytd26b = d.yoy.reduce((s, m) => s + m.y26, 0);
+      out.yoyRows = d.yoy.map(m => {
+        const pct = m.goal ? m.y26 / m.goal : 0;
+        const hasData = m.y26 > 0;
+        const v = m.y25 ? (m.y26 - m.y25) / m.y25 : 0;
+        return {
+          m: m.m, p25: this.fmtFull(m.y25), p26: hasData ? this.fmtFull(m.y26) : '—', pg: this.fmtFull(m.goal),
+          goalPct: hasData ? Math.min(100, Math.round(pct * 100)) : 0,
+          goalTxt: hasData ? Math.round(pct * 100) + '%' : '', goalColor: !hasData ? '#B9B4A9' : pct >= 1 ? '#2E8B57' : pct >= 0.8 ? '#B8860B' : '#C0433F',
+          varTxt: hasData ? (v >= 0 ? '+' : '') + Math.round(v * 100) + '%' : '', varColor: v >= 0 ? '#2E8B57' : '#C0433F',
+          bg: 'transparent', fw: '400',
+        };
+      });
+      const t25b = d.yoy.reduce((s, m) => s + m.y25, 0), tgb = d.yoy.reduce((s, m) => s + m.goal, 0);
+      out.yoyRows.push({ m: 'Total', p25: this.fmtFull(t25b), p26: this.fmtFull(ytd26b), pg: this.fmtFull(tgb), goalPct: Math.round(ytd26b / tgb * 100), goalTxt: Math.round(ytd26b / tgb * 100) + '%', goalColor: '#1D2126', varTxt: '', varColor: '#6B7076', bg: '#FAF9F6', fw: '700' });
+    }
+    if (S.view === 'calendar') {
+      out.months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(mn => {
+        const trips = d.trips.map((t, i) => ({ t, i })).filter(x => x.t.month === mn);
+        const days = trips.reduce((s, x) => s + (Number(x.t.days) || 0), 0);
+        return {
+          name: mn, days, daysColor: days > 0 ? '#1F3864' : '#B9B4A9', empty: trips.length === 0,
+          trips: trips.map(x => ({
+            week: x.t.week, who: x.t.who, days: x.t.days, status: x.t.status,
+            stBg: x.t.status === 'Done' ? '#E4F2E8' : x.t.status === 'Cancelled' ? '#ECEBE7' : '#FBF0DA',
+            stFg: x.t.status === 'Done' ? '#2E7D46' : x.t.status === 'Cancelled' ? '#6B7076' : '#9A6A08',
+            refStatus: (el) => { if (el) el.value = x.t.status; },
+            set: (e) => { const { name, value } = e.target; this.mut(dd => { dd.trips[x.i][name] = name === 'days' ? Number(value) || 0 : value; }); },
+            del: () => this.mut(dd => dd.trips.splice(x.i, 1)),
+          })),
+          add: () => this.mut(dd => dd.trips.push({ month: mn, week: 'W?', who: 'New trip', days: 0, status: 'Scheduled' })),
+        };
+      });
+    }
+    if (S.view === 'calls') {
+      const CST = { 'New': ['#E3EEF9', '#2361A5'], Attempting: ['#FBF0DA', '#9A6A08'], 'In Conversation': ['#E3EEF9', '#2361A5'], 'Meeting Set': ['#F3E8FA', '#7B3FA0'], Won: ['#E4F2E8', '#2E7D46'], 'Closed / Dead': ['#ECEBE7', '#6B7076'] };
+      const cAgg = s => d.calls.filter(c => c.status === s).length;
+      out.callStats = [
+        { label: 'Total', n: d.calls.length, color: '#1D2126' },
+        { label: 'Attempting', n: cAgg('Attempting'), color: '#9A6A08' },
+        { label: 'Meeting Set / Won', n: cAgg('Meeting Set') + cAgg('Won'), color: '#2E7D46' },
+        { label: 'Closed / Dead', n: cAgg('Closed / Dead'), color: '#6B7076' },
+      ];
+      out.callRows = d.calls.map((c, i) => ({
+        c: c.c, org: c.org, type: c.type, st: c.st, email: c.email, reason: c.reason,
+        dateTxt: this.fmtDate(c.date), fuTxt: this.fmtDate(c.fu), fuColor: c.fu && c.fu < this.today() ? '#C0433F' : '#1F3864', status: c.status,
+        stBg: (CST[c.status] || CST.Attempting)[0], stFg: (CST[c.status] || CST.Attempting)[1],
+        refStatus: (el) => { if (el) el.value = c.status; },
+        set: (e) => { const { name, value } = e.target; this.mut(dd => { dd.calls[i][name] = value; }); },
+        del: () => { if (confirm('Delete this contact?')) this.mut(dd => dd.calls.splice(i, 1)); },
+      }));
+      out.addLabel = 'Log contact';
+      out.onAdd = () => this.mut(dd => dd.calls.unshift({ c: 'New contact', org: '', type: 'Contracting Officer', vert: 'Federal', st: '', email: '', date: null, method: 'Email', attempts: 1, reason: '', nextStep: '', fu: null, status: 'New', note: '' }));
+    }
+    if (S.view === 'linkedin') {
+      const PST = { Idea: ['#ECEBE7', '#6B7076'], Drafting: ['#E3EEF9', '#2361A5'], Scheduled: ['#FBF0DA', '#9A6A08'], Posted: ['#E4F2E8', '#2E7D46'], Skipped: ['#ECEBE7', '#9AA0A6'] };
+      const pAgg = s => d.posts.filter(p => p.status === s).length;
+      const impr = d.posts.reduce((s, p) => s + (p.impr || 0), 0);
+      out.liStats = [
+        { label: 'Posted', n: pAgg('Posted') }, { label: 'Scheduled', n: pAgg('Scheduled') },
+        { label: 'Ideas', n: pAgg('Idea') }, { label: 'Impressions', n: impr },
+      ];
+      out.postRows = d.posts.map((p, i) => ({
+        dateTxt: this.fmtDate(p.date), pillar: p.pillar, hook: p.hook || '', status: p.status,
+        stBg: (PST[p.status] || PST.Idea)[0], stFg: (PST[p.status] || PST.Idea)[1],
+        refStatus: (el) => { if (el) el.value = p.status; },
+        set: (e) => { const { name, value } = e.target; this.mut(dd => { dd.posts[i][name] = value; }); },
+        del: () => this.mut(dd => dd.posts.splice(i, 1)),
+      }));
+      out.addLabel = 'Add post slot';
+      out.onAdd = () => this.mut(dd => dd.posts.push({ wk: null, date: null, pillar: 'Product Spotlight', fmt: '', hook: '', status: 'Idea', impr: 0, react: 0 }));
+      const maxP = Math.max(...d.pillars.map(p => p.n));
+      out.pillarRows = d.pillars.map(p => ({ p: p.p, n: p.n, pct: Math.round(p.n / maxP * 100) }));
+    }
+
+    // ---- Reports ----
+    out.isReports = S.view === 'reports';
+    if (S.view === 'reports') {
+      const tabs = [['scorecard', 'Agency Scorecard'], ['rankings', 'Rankings & Growth'], ['ordersRep', 'Order Activity'], ['bkHist', 'Booking History'], ['noContact', 'No Contact'], ['trainingRep', 'Training'], ['ceuRep', 'CEU / AIA'], ['healthRep', 'Health'], ['oppsRep', 'Opportunities'], ['specsRep', 'Spec Pipeline']];
+      out.repTabs = tabs.map(([id, label]) => {
+        const on = S.repTab === id;
+        return { label, go: () => this.setState({ repTab: id }), bg: on ? '#1D2126' : '#FFFFFF', fg: on ? '#F4F2ED' : '#4A4F55', border: on ? '#1D2126' : '#DAD6CD' };
+      });
+      out.repFilterRef = (el) => { if (el) el.value = S.repAgency; };
+      out.onRepFilter = (e) => this.setState({ repAgency: e.target.value });
+      const fA = x => S.repAgency === 'All' || (x.agent || x.n) === S.repAgency;
+      const cell = (t, fw, color) => ({ t: t == null || t === '' ? '—' : String(t), fw: fw || '500', color: color || '#4A4F55' });
+      let headers = [], rows = [], grid = '', title = '', sub = '', fname = '';
+      const pass = st0.quizPass ?? 80;
+      if (S.repTab === 'scorecard') {
+        title = 'Agency Scorecard'; fname = 'agency-scorecard';
+        sub = 'One row per agency — revenue, health, training, CEU, cadence in one export';
+        headers = ['Agency', 'Territory', 'Tier', 'Category', 'YTD 2026', 'FY 2025', 'YoY', 'Pipeline', 'Health', 'Cert Level', 'L1 Done', 'CEU Delivered', 'Days Since Touch', 'Status'];
+        grid = '1.6fr 1fr 0.6fr 0.7fr 0.8fr 0.8fr 0.6fr 0.8fr 0.55fr 0.9fr 0.6fr 0.6fr 0.7fr 0.6fr';
+        rows = d.agents.filter(a => fA({ agent: a.n })).map(a => {
+          const h = this.health(a), cl = this.certLevel(a.n);
+          const cp = (d.ceuProfiles || []).find(p => p.agent === a.n);
+          const days = a.last ? this.today() - a.last : null;
+          return { csv: [a.n, a.terr, a.tier, a.cat, a.ytd, a.prev, this.yoyOf(a), a.pipe, h, cl.level, cl.done + '/' + cl.total, cp ? cp.delivered : 0, days == null ? '' : days, a.status],
+            cells: [cell(a.n, '700', '#1D2126'), cell(a.terr), cell(a.tier, '700'), cell(a.cat), cell(this.fmtK(a.ytd), '700', '#1D2126'), cell(this.fmtK(a.prev)), cell(this.yoyOf(a), '700', this.yoyColor(a)), cell(this.fmtK(a.pipe)), cell(h, '800', this.healthBand(h)[1]), cell(cl.level, '700'), cell(cl.done + '/' + cl.total), cell(cp ? cp.delivered : 0), cell(days == null ? 'never' : days + 'd', '700', days == null || days > 30 ? '#C0433F' : '#4A4F55'), cell(a.status)] };
+        });
+      } else if (S.repTab === 'rankings' || S.repTab === 'ordersRep' || S.repTab === 'bkHist') {
+        const snapsR = this.snapshots();
+        const curR = snapsR.length ? snapsR[snapsR.length - 1] : null;
+        const prevR = snapsR.length > 1 ? snapsR[snapsR.length - 2] : null;
+        if (!curR) {
+          title = S.repTab === 'rankings' ? 'Agency Rankings & Growth' : S.repTab === 'ordersRep' ? 'Order Activity Report' : 'Net Booking History';
+          fname = 'bookings'; sub = 'No Data Available — upload an ERP bookings report in the Sales Import Center first.';
+          headers = ['—']; grid = '1fr'; rows = [];
+        } else if (S.repTab === 'rankings') {
+          title = 'Agency Rankings & Growth'; fname = 'agency-rankings';
+          sub = 'Ranked by net bookings — ' + curR.period + (prevR ? ' vs ' + prevR.period : '');
+          headers = ['Rank', 'Agency', 'Territory', 'Tier', 'Net Bookings', 'Prior Upload', 'Growth %'];
+          grid = '0.4fr 1.7fr 1fr 0.6fr 0.9fr 0.9fr 0.7fr';
+          rows = curR.rows.slice().sort((x, y) => y.net - x.net).filter(r => fA({ agent: r.agency })).map((r, i) => {
+            const ag = d.agents.find(x => x.n === r.agency) || {};
+            const p = prevR ? (prevR.rows || []).find(x => x.agency === r.agency) : null;
+            const g = p ? this.growthPct(r.net, p.net) : null;
+            const gT = g == null ? '—' : (g >= 0 ? '+' : '') + Math.round(g * 100) + '%';
+            return { csv: [i + 1, r.agency, ag.terr || '', ag.tier || '', r.net, p ? p.net : '', gT],
+              cells: [cell('#' + (i + 1), '800'), cell(r.agency, '700', '#1D2126'), cell(ag.terr), cell(ag.tier, '700'), cell(this.fmtK(r.net), '700', r.net < 0 ? '#B23E3A' : '#1D2126'), cell(p ? this.fmtK(p.net) : '—'), cell(gT, '800', g == null ? '#8A8F95' : g >= 0 ? '#2E7D46' : '#B23E3A')] };
+          });
+        } else if (S.repTab === 'ordersRep') {
+          title = 'Order Activity Report'; fname = 'order-activity';
+          sub = 'Orders added / changed / deleted per agency — ' + curR.period;
+          headers = ['Agency', 'Net Bookings', 'Orders Added', 'Orders Changed', 'Orders Deleted', 'Net Order Δ'];
+          grid = '1.8fr 0.9fr 0.8fr 0.8fr 0.8fr 0.8fr';
+          rows = curR.rows.slice().sort((x, y) => (y.added || 0) - (x.added || 0)).filter(r => fA({ agent: r.agency })).map(r => {
+            const nd = (r.added || 0) - (r.deleted || 0);
+            return { csv: [r.agency, r.net, r.added || 0, r.changed || 0, r.deleted || 0, nd],
+              cells: [cell(r.agency, '700', '#1D2126'), cell(this.fmtK(r.net), '700'), cell(r.added || 0), cell(r.changed || 0), cell(r.deleted || 0, '600', r.deleted > 0 ? '#B23E3A' : '#4A4F55'), cell((nd >= 0 ? '+' : '') + nd, '800', nd >= 0 ? '#2E7D46' : '#B23E3A')] };
+          });
+        } else {
+          title = 'Net Booking History'; fname = 'booking-history';
+          sub = 'Every agency across all ' + snapsR.length + ' upload snapshot(s) — monthly comparison';
+          headers = ['Agency'].concat(snapsR.map(u => u.period));
+          grid = '1.8fr ' + snapsR.map(() => '0.9fr').join(' ');
+          const names = Array.from(new Set(snapsR.flatMap(u => u.rows.map(r => r.agency)))).sort();
+          rows = names.filter(n => fA({ agent: n })).map(n => {
+            const vals = snapsR.map(u => { const r = u.rows.find(x => x.agency === n); return r ? r.net : null; });
+            return { csv: [n].concat(vals.map(v => v == null ? '' : v)),
+              cells: [cell(n, '700', '#1D2126')].concat(vals.map(v => cell(v == null ? '—' : this.fmtK(v), '600', v != null && v < 0 ? '#B23E3A' : '#4A4F55'))) };
+          });
+        }
+      } else if (S.repTab === 'noContact') {
+        title = 'No Contact Report'; fname = 'no-contact';
+        sub = 'Agencies by days since last logged touch — anyone over 30 days is red';
+        headers = ['Agency', 'Territory', 'Tier', 'Last Touch', 'Days Since', 'Next Scheduled', 'Priority'];
+        grid = '1.6fr 1fr 0.6fr 0.8fr 0.7fr 0.9fr 2fr';
+        const nowR = this.today();
+        rows = d.agents.filter(a => a.cat !== 'Exit' && fA({ agent: a.n }))
+          .map(a => ({ a, days: a.last ? nowR - a.last : null }))
+          .sort((x, y) => (y.days == null ? 9999 : y.days) - (x.days == null ? 9999 : x.days))
+          .map(x => ({ csv: [x.a.n, x.a.terr, x.a.tier, this.fmtDate(x.a.last), x.days == null ? 'never' : x.days, this.fmtDate(x.a.next), x.a.pri || ''],
+            cells: [cell(x.a.n, '700', '#1D2126'), cell(x.a.terr), cell(x.a.tier, '700'), cell(this.fmtDate(x.a.last)), cell(x.days == null ? 'never' : x.days + 'd', '800', x.days == null || x.days > 30 ? '#B23E3A' : x.days > 14 ? '#9A6A08' : '#2E7D46'), cell(this.fmtDate(x.a.next)), cell(x.a.pri)] }));
+      } else if (S.repTab === 'trainingRep') {
+        title = 'Training Report'; fname = 'training-report';
+        sub = 'Every course record — status, quiz score vs pass mark ' + pass + ', completion and expiry dates';
+        headers = ['Agency', 'Course', 'Status', 'Quiz', 'Pass?', 'Assigned', 'Completed', 'Expires', 'Notes'];
+        grid = '1.4fr 1.7fr 0.8fr 0.5fr 0.5fr 0.8fr 0.8fr 0.8fr 1.2fr';
+        rows = (d.trainingRecs || []).filter(fA).map(r => ({
+          csv: [r.agent, r.course, r.status, r.quiz ?? '', r.quiz == null ? '' : r.quiz >= pass ? 'Pass' : 'Fail', this.fmtDate(r.assigned), this.fmtDate(r.completed), this.fmtDate(r.expires), r.notes || ''],
+          cells: [cell(r.agent, '700', '#1D2126'), cell(r.course), cell(r.status, '700', r.status === 'Completed' ? '#2E7D46' : r.status === 'Overdue' || r.status === 'Expired' ? '#B23E3A' : '#9A6A08'), cell(r.quiz), cell(r.quiz == null ? '—' : r.quiz >= pass ? 'Pass' : 'Fail', '700', r.quiz == null ? '#8A8F95' : r.quiz >= pass ? '#2E7D46' : '#B23E3A'), cell(this.fmtDate(r.assigned)), cell(this.fmtDate(r.completed)), cell(this.fmtDate(r.expires)), cell(r.notes)],
+        }));
+      } else if (S.repTab === 'ceuRep') {
+        title = 'CEU / AIA Report'; fname = 'ceu-report';
+        sub = 'Event log with follow-up status, plus presenter pipeline position per agency';
+        headers = ['Date', 'Agency', 'Presenter', 'Firm', 'Course', 'Attendees', 'Format', 'Follow-up', 'Opps Created', 'Status'];
+        grid = '0.7fr 1.3fr 0.8fr 1.2fr 1.3fr 0.6fr 0.7fr 0.8fr 0.7fr 1.2fr';
+        rows = (d.ceuEvents || []).filter(fA).map(e => ({
+          csv: [this.fmtDate(e.date), e.agent, e.presenter, e.firm, e.course, e.attendees, e.loc, e.fuReq ? (e.fuDone ? 'Done' : 'Open') : 'n/a', e.opps || 0, e.status],
+          cells: [cell(this.fmtDate(e.date), '700'), cell(e.agent, '700', '#1D2126'), cell(e.presenter), cell(e.firm), cell(e.course), cell(e.attendees, '700'), cell(e.loc), cell(e.fuReq ? (e.fuDone ? 'Done' : 'Open') : 'n/a', '700', e.fuReq && !e.fuDone ? '#B23E3A' : '#2E7D46'), cell(e.opps || 0), cell(e.status)],
+        }));
+      } else if (S.repTab === 'healthRep') {
+        title = 'Network Health Report'; fname = 'health-report';
+        sub = 'Weighted composite per agency with all six component scores (weights set in Settings)';
+        const w = st0.weights || {};
+        headers = ['Agency', 'Health', 'Revenue (' + w.rev + '%)', 'Opps (' + w.opp + '%)', 'Training (' + w.training + '%)', 'CEU (' + w.ceu + '%)', 'Strategic (' + w.strategic + '%)', 'Reporting (' + w.reporting + '%)'];
+        grid = '1.7fr 0.6fr 0.9fr 0.8fr 0.85fr 0.75fr 0.85fr 0.9fr';
+        rows = d.agents.filter(a => a.cat !== 'Exit' && fA({ agent: a.n })).map(a => {
+          const h = this.health(a), p = this.healthParts(a);
+          return { csv: [a.n, h, p.rev, p.opp, p.tr, p.ceu, p.strat, p.rep],
+            cells: [cell(a.n, '700', '#1D2126'), cell(h, '800', this.healthBand(h)[1]), cell(p.rev), cell(p.opp), cell(p.tr), cell(p.ceu), cell(p.strat), cell(p.rep)] };
+        }).sort((x, y) => Number(y.csv[1]) - Number(x.csv[1]));
+      } else if (S.repTab === 'oppsRep') {
+        title = 'Opportunities Report'; fname = 'opportunities-report';
+        sub = 'Full pipeline register with stage, value, owner and next step';
+        headers = ['Opportunity', 'Agency', 'Stage', 'Value', 'Value ($)', 'Owner', 'Next Step', 'Note'];
+        grid = '1.5fr 1.2fr 0.8fr 0.6fr 0.7fr 0.7fr 1.7fr 1.2fr';
+        rows = d.opps.filter(fA).map(o => ({
+          csv: [o.name, o.agent, o.stage, o.value, o.vNum || 0, o.owner, o.next, o.note || ''],
+          cells: [cell(o.name, '700', '#1D2126'), cell(o.agent), cell(o.stage, '700', (STAGE[o.stage] || STAGE.Targeted)[1]), cell(o.value, '700'), cell(o.vNum ? this.fmtK(o.vNum) : '—'), cell(o.owner), cell(o.next), cell(o.note)],
+        }));
+      } else {
+        title = 'Spec Pipeline Report'; fname = 'spec-pipeline-report';
+        sub = 'Specification influence activity — Target Identified through Awarded';
+        headers = ['Project', 'Agency', 'Specifier', 'Stage', 'Value', 'Next Step'];
+        grid = '1.5fr 1.2fr 1.1fr 1.1fr 0.6fr 1.9fr';
+        rows = d.specs.filter(fA).map(s => ({
+          csv: [s.project, s.agent, s.specifier, s.stage, s.value, s.next],
+          cells: [cell(s.project, '700', '#1D2126'), cell(s.agent), cell(s.specifier), cell(s.stage, '700'), cell(s.value, '700'), cell(s.next)],
+        }));
+      }
+      out.repTitle = title; out.repSub = sub; out.repGrid = grid;
+      out.repCols = headers; out.repRows = rows;
+      out.repFoot = rows.length + ' rows' + (S.repAgency !== 'All' ? ' · filtered to ' + S.repAgency : ' · all agencies') + ' · CSV export includes exactly what is shown';
+      out.repExport = () => this.dlCSV('xtl-' + fname + (S.repAgency !== 'All' ? '-' + S.repAgency.toLowerCase().replace(/[^a-z0-9]+/g, '-') : ''), headers, rows.map(r => r.csv));
+    }
+
+    // ---- Sales Import Center ----
+    out.isImports = S.view === 'imports';
+    if (S.view === 'imports') {
+      out.impBusy = S.impBusy; out.impErr = S.impErr;
+      out.onImpFile = (e) => { const f = e.target.files && e.target.files[0]; if (f) this.handleImportFile(f); e.target.value = ''; };
+      out.impPreview = !!S.imp;
+      if (S.imp) {
+        const matched = S.imp.rows.filter(r => r.match !== '__skip').length;
+        out.impFile = S.imp.fileName;
+        out.impSummary = S.imp.rows.length + ' rows parsed · ' + matched + ' will import';
+        out.impPeriod = S.imp.period;
+        out.onImpPeriod = (e) => this.setState({ imp: Object.assign({}, S.imp, { period: e.target.value }) });
+        out.impRows = S.imp.rows.map((r, i) => ({
+          code: r.code || '—', name: r.name,
+          net: this.fmtK(r.net), netColor: r.net < 0 ? '#B23E3A' : '#1D2126',
+          added: r.added == null ? '—' : r.added, changed: r.changed == null ? '—' : r.changed, deleted: r.deleted == null ? '—' : r.deleted,
+          bg: r.match === '__skip' ? '#FBFAF7' : 'transparent',
+          mBg: r.match === '__skip' ? '#FAF9F6' : r.match === '__new' ? '#E3EEF9' : '#E4F2E8',
+          mBorder: r.match === '__skip' ? '#DAD6CD' : r.match === '__new' ? '#B9D3EA' : '#BFDCC8',
+          refMatch: (el) => { if (el) el.value = r.match; },
+          setMatch: (e) => { const rows = S.imp.rows.slice(); rows[i] = Object.assign({}, r, { match: e.target.value }); this.setState({ imp: Object.assign({}, S.imp, { rows }) }); },
+        }));
+        out.impCancel = () => this.setState({ imp: null, impErr: '' });
+        out.impConfirm = () => {
+          const imp = S.imp;
+          const use = imp.rows.filter(r => r.match !== '__skip');
+          if (!use.length) { this.setState({ impErr: 'No rows selected to import — every row is set to Skip.' }); return; }
+          this.mut(dd => {
+            const finalRows = use.map(r => {
+              let agency = r.match;
+              if (agency === '__new') {
+                agency = r.name;
+                if (!dd.agents.some(a => a.n === agency)) dd.agents.push({ n: agency, terr: '', cat: 'Build', tier: 'T2', wbTier: '', cov: 'Guide/Joint', ytd: 0, prev: 0, pipe: 0, vert: '', pri: '', status: 'Yellow', blocker: '', visit: 'TBD', cq: '—', geoA: '', geoD: '', overlay: false, split: false, risk: 'Created from ERP import ' + imp.fileName });
+              }
+              return { agency, code: r.code, sp: r.sp, net: r.net, added: r.added || 0, changed: r.changed || 0, deleted: r.deleted || 0, reportName: r.name };
+            });
+            dd.uploads = dd.uploads || [];
+            dd.uploads.push({ id: Date.now(), file: imp.fileName, period: imp.period, date: this.today(), by: 'Alex Morgan', status: 'Imported', records: finalRows.length, rows: finalRows });
+          });
+          this.setState({ imp: null, impErr: '' });
+        };
+      }
+      const ups = (d.uploads || []).slice().sort((a, b) => (b.date || 0) - (a.date || 0));
+      out.impNoHistory = ups.length === 0;
+      out.impHasHistory = ups.length > 0;
+      out.impHistRows = ups.map(u => ({
+        file: u.file, period: u.period, date: this.fmtDate(u.date), records: u.records, by: u.by,
+        status: u.status, stBg: u.status === 'Imported' ? '#E4F2E8' : '#ECEBE7', stFg: u.status === 'Imported' ? '#2E7D46' : '#6B7076',
+        rbLabel: u.status === 'Imported' ? 'Roll back' : 'Restore',
+        rollback: () => this.mut(dd => { const x = dd.uploads.find(z => z.id === u.id); if (x) x.status = x.status === 'Imported' ? 'Rolled Back' : 'Imported'; }),
+        del: () => { if (confirm('Permanently delete this upload and its snapshot?')) this.mut(dd => { dd.uploads = dd.uploads.filter(z => z.id !== u.id); dd.deletedUploads = (dd.deletedUploads || []).concat([u.id]); }); },
+      }));
+    }
+
+    out.isGuide = S.view === 'guide';
+
+    // ---- Settings ----
+    out.isSettings = S.view === 'settings';
+    if (S.view === 'settings') {
+      const w = st0.weights || {};
+      const wDefs = [['rev', 'Revenue performance'], ['opp', 'Opportunity generation'], ['training', 'Training completion'], ['ceu', 'CEU / AIA engagement'], ['strategic', 'Strategic accounts'], ['reporting', 'Reporting compliance']];
+      out.setWeights = wDefs.map(([key, label]) => ({
+        label, v: String(w[key] ?? 0),
+        set: (e) => { const v = Math.max(0, Math.min(100, Number(e.target.value) || 0)); this.mut(dd => { dd.settings.weights[key] = v; }); },
+      }));
+      const wTot = wDefs.reduce((s, [k]) => s + (w[k] || 0), 0);
+      out.setWTot = wTot; out.setWTotColor = wTot === 100 ? '#2E7D46' : '#B23E3A';
+      const nDefs = [
+        ['quizPass', 'Quiz pass mark', v => v],
+        ['healthGreen', 'Health "green" at ≥', v => v ?? 70],
+        ['healthYellow', 'Health "yellow" at ≥', v => v ?? 45],
+        ['bookingMod', 'Booking modifier max (± pts)', v => v ?? 10],
+      ];
+      out.setNums = nDefs.map(([key, label, dflt]) => ({
+        label, v: String(dflt(st0[key])),
+        set: (e) => { const v = Math.max(0, Math.min(100, Number(e.target.value) || 0)); this.mut(dd => { dd.settings[key] = v; }); },
+      }));
+      const mkList = (key, label, rows) => ({
+        label, rows, v: (st0[key] || []).join('\n'),
+        set: (e) => { const arr = e.target.value.split('\n').map(s => s.trim()).filter(Boolean); this.mut(dd => { dd.settings[key] = arr; }); },
+      });
+      out.setCourses = (st0.courseList || []).join('\n');
+      out.onSetCourses = (e) => { const arr = e.target.value.split('\n').map(s => s.trim()).filter(Boolean); this.mut(dd => { dd.settings.courseList = arr; }); };
+      out.setTracks = (st0.specialistTracks || []).join('\n');
+      out.onSetTracks = (e) => { const arr = e.target.value.split('\n').map(s => s.trim()).filter(Boolean); this.mut(dd => { dd.settings.specialistTracks = arr; }); };
+      out.setLists = [
+        mkList('oppStages', 'Opportunity stages', 7),
+        mkList('specStages', 'Spec pipeline stages', 7),
+        mkList('trainingStatuses', 'Training statuses', 6),
+        mkList('aiaStatuses', 'AIA / CEU statuses', 7),
+        mkList('tiers', 'Agency tiers', 5),
+        mkList('cats', 'Categories', 5),
+      ];
+      out.exportData = () => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(this.state.data, null, 1)], { type: 'application/json' }));
+        const dt = new Date();
+        a.download = 'xtl-channel-os-backup-' + dt.toISOString().slice(0, 10) + '.json';
+        a.click();
+      };
+      out.onRestoreFile = (e) => {
+        const f = e.target.files && e.target.files[0]; e.target.value = '';
+        if (!f) return;
+        const rd = new FileReader();
+        rd.onload = () => {
+          try {
+            const j = JSON.parse(rd.result);
+            if (!j || !Array.isArray(j.agents)) { alert('That file does not look like a Channel OS backup.'); return; }
+            if (confirm('Replace ALL data in this browser with the backup "' + f.name + '"?')) {
+              try { localStorage.setItem('xtl_demo_v1', JSON.stringify(j)); } catch (err) {}
+              this.setState({ data: j });
+              this.pushCloud(j);
+            }
+          } catch (err) { alert('Could not read that backup file: ' + err.message); }
+        };
+        rd.readAsText(f);
+      };
+      out.resetData = () => {
+        if (confirm('Reset ALL data to the shipped defaults? Your local edits will be lost.')) {
+          try { localStorage.removeItem('xtl_demo_v1'); } catch (e) {}
+          const fresh = this.loadLocal();
+          this.setState({ data: fresh });
+          this.pushCloud(fresh);
+        }
+      };
+    }
+
+    return out;
+  }
+}
+</script>
+</body>
+</html>
